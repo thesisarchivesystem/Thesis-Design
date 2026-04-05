@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terms &amp; Conditions - Thesis Archive Management System</title>
+<title>Messages - Thesis Archive Management System</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -543,154 +543,523 @@
   /* ===== CONTENT ===== */
   .content {
     flex: 1;
-    padding: 28px 32px;
+    padding: 24px 28px;
   }
 
-  .terms-hero {
-    background: linear-gradient(135deg, rgba(139,35,50,0.1), rgba(61,139,74,0.08));
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 26px;
+  .messenger-shell {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 290px minmax(0, 1fr) 260px;
     gap: 18px;
-    margin-bottom: 22px;
+    min-height: calc(100vh - 120px);
   }
 
-  .terms-hero h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 28px;
-    margin-bottom: 8px;
+  .messenger-shell.details-hidden {
+    grid-template-columns: 290px minmax(0, 1fr);
   }
 
-  .terms-hero p {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-
-  .terms-card {
-    background: var(--bg-card);
+  .contacts-panel,
+  .conversation-panel,
+  .details-panel {
+    background: rgba(255,255,255,0.82);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
+    border-radius: 24px;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(10px);
+  }
+
+  [data-theme="dark"] .contacts-panel,
+  [data-theme="dark"] .conversation-panel,
+  [data-theme="dark"] .details-panel {
+    background: rgba(36,28,34,0.88);
+  }
+
+  .contacts-panel {
+    padding: 18px;
     display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 14px;
+  }
+
+  .chat-avatar,
+  .detail-avatar,
+  .bubble-avatar {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--maroon), var(--terracotta));
+  }
+
+  .chat-avatar,
+  .detail-avatar,
+  .bubble-avatar {
+    display: flex;
+  }
+
+  .panel-search {
+    width: 100%;
+    border: none;
+    background: var(--bg-card);
+    border-radius: 999px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+
+  .contacts-list {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+
+  .contact-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    border-radius: 18px;
+    padding: 10px 10px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    text-align: left;
+  }
+
+  .contact-item:hover {
+    background: rgba(139,35,50,0.05);
+    transform: translateY(-1px);
+  }
+
+  .contact-item.active {
+    background: rgba(139,35,50,0.10);
+  }
+
+  .contact-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--sky), var(--maroon));
+  }
+
+  .contact-main {
+    min-width: 0;
+  }
+
+  .contact-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .contact-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .contact-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sage);
+    flex-shrink: 0;
+  }
+
+  .contact-preview {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .contact-meta {
+    display: grid;
+    justify-items: end;
+    gap: 6px;
+  }
+
+  .contact-time {
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  .contact-unread {
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--maroon);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .contact-unread.empty {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(139,35,50,0.18);
+    color: var(--maroon);
+  }
+
+  .conversation-panel {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .chat-person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .chat-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 15px;
+    background: linear-gradient(135deg, var(--gold), var(--terracotta));
+  }
+
+  .chat-name-row {
+    display: flex;
+    align-items: center;
     gap: 10px;
   }
 
-  .terms-card h3 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 18px;
+  .chat-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--maroon);
   }
 
-  .terms-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    margin-bottom: 22px;
+  .chat-subtitle {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 3px;
   }
 
-  .terms-section {
-    background: var(--bg-card);
+  .online-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--sage);
+  }
+
+  .details-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
     border: 1px solid var(--border);
-    border-radius: 16px;
+    background: var(--bg-card);
+    color: var(--maroon);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .details-toggle:hover {
+    background: rgba(139,35,50,0.08);
+    transform: translateY(-1px);
+  }
+
+  .details-toggle svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .chat-body {
+    padding: 18px 20px;
+    overflow: auto;
+    background: rgba(251,248,244,0.65);
+  }
+
+  [data-theme="dark"] .chat-body {
+    background: rgba(26,18,24,0.45);
+  }
+
+  .chat-thread {
+    display: none;
+  }
+
+  .chat-thread.active {
+    display: grid;
+    gap: 14px;
+  }
+
+  .day-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    justify-content: center;
+  }
+
+  .day-divider::before,
+  .day-divider::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+  }
+
+  .bubble-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .bubble-row.mine {
+    justify-content: flex-end;
+  }
+
+  .bubble-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+    margin-bottom: 2px;
+    background: linear-gradient(135deg, var(--maroon), var(--gold));
+  }
+
+  .bubble {
+    max-width: 64%;
+    background: rgba(139,35,50,0.10);
+    color: var(--text-primary);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .bubble-row.mine .bubble {
+    background: var(--maroon);
+    color: white;
+  }
+
+  .file-bubble {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .file-thumb {
+    width: 92px;
+    height: 54px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f7e7ea, #d7d9e8);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .composer {
+    background: rgba(139,35,50,0.10);
+    border-top: 1px solid rgba(139,35,50,0.12);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .send-button,
+  .attach-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .composer-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-card);
+    border-radius: 999px;
+    padding: 9px 12px 9px 10px;
+  }
+
+  .attach-button {
+    min-width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: rgba(139,35,50,0.10);
+    color: var(--maroon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .attach-button svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .composer-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--text-primary);
+    outline: none;
+  }
+
+  .send-button {
+    min-width: 52px;
+    height: 46px;
+    border-radius: 999px;
+    background: var(--maroon);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 10px 20px rgba(139,35,50,0.18);
+  }
+
+  .details-panel {
     padding: 18px;
     display: grid;
-    gap: 8px;
+    align-content: start;
+    gap: 18px;
   }
 
-  .terms-section h4 { font-size: 15px; font-weight: 700; }
-  .terms-section p { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+  .messenger-shell.details-hidden .details-panel {
+    display: none;
+  }
 
-  .terms-list {
+  .detail-profile {
     display: grid;
+    justify-items: center;
+    text-align: center;
     gap: 8px;
+    padding-top: 8px;
   }
 
-  .terms-item {
-    background: var(--bg-card-alt);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
+  .detail-avatar {
+    width: 96px;
+    height: 96px;
+    font-size: 28px;
+    background: linear-gradient(135deg, var(--gold), var(--maroon));
+  }
+
+  .detail-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .detail-role {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: -4px;
+  }
+
+  .detail-links {
+    display: grid;
+    gap: 10px;
     font-size: 12px;
     color: var(--text-secondary);
   }
 
-    .nav-group {}
+  .detail-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-  .nav-group-toggle {
-    display: flex; align-items: center; gap: 12px;
-    padding: 11px 14px;
-    border-radius: 10px;
-    font-size: 14px; font-weight: 500;
+  .attachments h4 {
+    font-size: 12px;
     color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none; background: none;
-    width: 100%;
-    text-align: left;
-    font-family: inherit;
+    margin-bottom: 10px;
   }
 
-  .nav-group-toggle:hover { background: var(--sidebar-hover-bg); color: var(--text-primary); }
-
-  .nav-group-toggle svg {
-    width: 20px; height: 20px; flex-shrink: 0;
-    stroke: currentColor; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  .attachment-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
   }
 
-  .nav-group-toggle .nav-chevron {
-    width: 16px; height: 16px;
-    margin-left: auto;
-    transition: transform 0.25s ease;
-    opacity: 0.5;
-  }
-
-  .nav-group.open .nav-chevron { transform: rotate(90deg); }
-
-  .nav-group.open .nav-group-toggle {
+  .attachment-item {
+    background: rgba(139,35,50,0.10);
+    border-radius: 12px;
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 10px;
     color: var(--maroon);
+    font-weight: 700;
+  }
+
+  .attachment-icon {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .view-all {
+    justify-self: center;
+    border: 1px solid var(--maroon);
+    background: transparent;
+    color: var(--maroon);
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 12px;
     font-weight: 600;
   }
 
-  .nav-subitems {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1280px) {
+    .messenger-shell {
+      grid-template-columns: 260px minmax(0, 1fr) 230px;
+    }
   }
 
-  .nav-group.open .nav-subitems {
-    max-height: 200px;
-  }
+  @media (max-width: 1100px) {
+    .messenger-shell {
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
 
-  .nav-subitem {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 14px 9px 46px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 13px; font-weight: 500;
-    color: var(--text-tertiary);
-    transition: all 0.2s ease;
-    position: relative;
-  }
-
-  .nav-subitem:hover { background: var(--sidebar-hover-bg); color: var(--text-primary); }
-
-  .nav-subitem::before {
-    content: '';
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0.6;
-    position: absolute;
-    left: 26px;
-  }
-
-
-  @media (max-width: 1200px) {
-    .terms-hero { grid-template-columns: 1fr; }
-    .terms-grid { grid-template-columns: 1fr; }
+    .details-panel {
+      display: none;
+    }
   }
 
   @media (max-width: 1024px) {
@@ -707,70 +1076,11 @@
     .topbar { padding: 0 16px; }
     .search-bar { width: 200px; }
     .topbar-info { display: none; }
-    .content { padding: 20px 16px; }
-  }
-
-  .ai-chatbot-fab {
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    width: 64px;
-    height: 64px;
-    border: none;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--maroon), var(--terracotta));
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 14px 30px rgba(139,35,50,0.22);
-    cursor: pointer;
-    z-index: 300;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  }
-
-  .ai-chatbot-fab:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 18px 34px rgba(139,35,50,0.28);
-    filter: saturate(1.05);
-  }
-
-  .ai-chatbot-fab:focus-visible {
-    outline: 3px solid rgba(201,150,58,0.28);
-    outline-offset: 3px;
-  }
-
-  .ai-chatbot-fab svg {
-    width: 34px;
-    height: 34px;
-    display: block;
-  }
-
-  .ai-chatbot-fab .bot-fill {
-    fill: currentColor;
-  }
-
-  .ai-chatbot-fab .bot-cut {
-    fill: var(--bg-card, #fff);
-  }
-
-  [data-theme="dark"] .ai-chatbot-fab {
-    box-shadow: 0 16px 34px rgba(0,0,0,0.34);
-  }
-
-  @media (max-width: 768px) {
-    .ai-chatbot-fab {
-      right: 18px;
-      bottom: 18px;
-      width: 58px;
-      height: 58px;
-      border-radius: 18px;
-    }
-
-    .ai-chatbot-fab svg {
-      width: 30px;
-      height: 30px;
-    }
+    .content { padding: 16px; }
+    .messenger-shell { grid-template-columns: 1fr; }
+    .contacts-panel,
+    .details-panel { display: none; }
+    .bubble { max-width: 82%; }
   }
 </style>
 </head>
@@ -785,34 +1095,15 @@
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
 
-    <a href="faculty dashboard.html" class="nav-item">
+    <a href="vpaa dashboard.html" class="nav-item">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </a>
 
-    <a href="faculty categories.html" class="nav-item">
+    <a href="vpaa categories.html" class="nav-item">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Categories
     </a>
-
-    <a href="add files.html" class="nav-item">
-      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M12 13V7"/><path d="M9 10l3-3 3 3"/></svg>
-      Add Files
-    </a>
-
-    <!-- Manage Thesis (collapsible) -->
-    <div class="nav-group open">
-      <button class="nav-group-toggle" onclick="this.parentElement.classList.toggle('open')">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Manage Thesis
-        <svg class="nav-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-      </button>
-      <div class="nav-subitems">
-        <a href="add thesis.html" class="nav-subitem">Add Thesis</a>
-        <a href="approved thesis.html" class="nav-subitem">Approved Theses</a>
-        <a href="review submissions.html" class="nav-subitem">Review Submissions</a>
-      </div>
-    </div>
 
     <div class="nav-section-label" style="margin-top:8px;">Activity</div>
 
@@ -829,10 +1120,12 @@
 
   <div class="sidebar-footer">
     <a href="about.html" data-utility-link>About</a>
-    <a href="support.html" data-utility-link>Support</a>
-    <a href="terms and conditions.html" class="nav-item" style="padding: 7px 14px;" data-utility-link>Terms &amp; Conditions</a>
+    <a href="support.html" class="nav-item" style="padding: 7px 14px;" data-utility-link>Support</a>
+    <a href="terms and conditions.html" data-utility-link>Terms &amp; Conditions</a>
   </div>
 </aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <div class="main">
   <header class="topbar">
@@ -841,9 +1134,9 @@
         <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
       </button>
       <div class="search-bar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" placeholder="Search policies and terms...">
-    </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search messages, contacts, or notes...">
+      </div>
     </div>
 
     <div class="topbar-right">
@@ -941,73 +1234,213 @@
   </header>
 
   <div class="content">
-    <section class="terms-hero">
-      <div>
-        <h1>Terms &amp; Conditions</h1>
-        <p>These terms outline responsibilities for using the Thesis Archive Management System, including submission rules, data handling, and institutional policies.</p>
-      </div>
-      <div class="terms-card">
-        <h3>Effective Date</h3>
-        <div style="font-size:12px; color: var(--text-secondary);">February 7, 2026</div>
-        <div style="font-size:12px; color: var(--text-secondary);">Applies to all student, adviser, and librarian accounts.</div>
-      </div>
-    </section>
+    <section class="messenger-shell details-hidden" id="messengerShell">
+      <aside class="contacts-panel">
+        <input class="panel-search" type="text" placeholder="Search Here...">
 
-    <section class="terms-grid">
-      <div class="terms-section">
-        <h4>Acceptable Use</h4>
-        <p>Users must submit original work, respect intellectual property, and follow campus guidelines for academic integrity.</p>
-        <div class="terms-list">
-          <div class="terms-item">No plagiarism or misrepresentation of authorship.</div>
-          <div class="terms-item">Do not upload confidential data without clearance.</div>
-          <div class="terms-item">Use the platform only for academic and institutional purposes.</div>
+        <div class="contacts-list">
+          <button type="button" class="contact-item active" data-thread="dianne" data-thread-name="Dianne Jhonson" data-thread-role="Junior Developer" data-thread-status="Online" data-thread-avatar="DJ" data-thread-note1="View Friends" data-thread-note2="Add to Favorites">
+            <div class="contact-avatar">DJ</div>
+            <div class="contact-main">
+              <div class="contact-name-row">
+                <div class="contact-name">Dianne Jhonson</div>
+                <span class="contact-status-dot"></span>
+              </div>
+              <div class="contact-preview">Hi, have you got the project report pdf?</div>
+            </div>
+            <div class="contact-meta">
+              <div class="contact-time">10:35 AM</div>
+              <div class="contact-unread">1</div>
+            </div>
+          </button>
+
+          <button type="button" class="contact-item" data-thread="lisa" data-thread-name="Lisa Roy" data-thread-role="Project Reviewer" data-thread-status="Away" data-thread-avatar="LR" data-thread-note1="Shared Folder" data-thread-note2="Pinned Thread">
+            <div class="contact-avatar">LR</div>
+            <div class="contact-main">
+              <div class="contact-name-row">
+                <div class="contact-name">Lisa Roy</div>
+              </div>
+              <div class="contact-preview">Hi, are you available tomorrow?</div>
+            </div>
+            <div class="contact-meta">
+              <div class="contact-time">10:35 AM</div>
+              <div class="contact-unread empty">&#10003;</div>
+            </div>
+          </button>
+
+          <button type="button" class="contact-item" data-thread="jamie" data-thread-name="Jamie Taylor" data-thread-role="Panel Assistant" data-thread-status="Online" data-thread-avatar="JT" data-thread-note1="Review Notes" data-thread-note2="Request Follow-up">
+            <div class="contact-avatar">JT</div>
+            <div class="contact-main">
+              <div class="contact-name-row">
+                <div class="contact-name">Jamie Taylor</div>
+              </div>
+              <div class="contact-preview">Nice one. Will do it tomorrow.</div>
+            </div>
+            <div class="contact-meta">
+              <div class="contact-time">10:35 AM</div>
+              <div class="contact-unread empty">&#10003;</div>
+            </div>
+          </button>
+
+          <button type="button" class="contact-item" data-thread="jason" data-thread-name="Jason Roy" data-thread-role="Archive Staff" data-thread-status="Offline" data-thread-avatar="JR" data-thread-note1="Metadata Check" data-thread-note2="Archive Access">
+            <div class="contact-avatar">JR</div>
+            <div class="contact-main">
+              <div class="contact-name-row">
+                <div class="contact-name">Jason Roy</div>
+              </div>
+              <div class="contact-preview">That's Great. I am looking forward to having a great start.</div>
+            </div>
+            <div class="contact-meta">
+              <div class="contact-time">10:35 AM</div>
+              <div class="contact-unread empty">&#10003;</div>
+            </div>
+          </button>
+
+          <button type="button" class="contact-item" data-thread="amy" data-thread-name="Amy Frost" data-thread-role="Library Intake" data-thread-status="Online" data-thread-avatar="AF" data-thread-note1="Signed Forms" data-thread-note2="Favorite Contact">
+            <div class="contact-avatar">AF</div>
+            <div class="contact-main">
+              <div class="contact-name-row">
+                <div class="contact-name">Amy Frost</div>
+              </div>
+              <div class="contact-preview">Hi, without just working on the chat app right now?</div>
+            </div>
+            <div class="contact-meta">
+              <div class="contact-time">10:35 AM</div>
+              <div class="contact-unread empty">&#10003;</div>
+            </div>
+          </button>
         </div>
-      </div>
-      <div class="terms-section">
-        <h4>Submission Ownership</h4>
-        <p>Authors retain ownership of their work while granting the university the right to store and display approved theses.</p>
-        <div class="terms-list">
-          <div class="terms-item">Metadata may be edited by archive administrators.</div>
-          <div class="terms-item">Embargo requests must be approved by the adviser.</div>
-          <div class="terms-item">Final copies become part of the institutional record.</div>
+
+      </aside>
+
+      <section class="conversation-panel">
+        <div class="chat-header">
+          <div class="chat-person">
+            <div class="chat-avatar" id="chatAvatar">DJ</div>
+            <div>
+              <div class="chat-name-row">
+                <div class="chat-name" id="chatName">Dianne Jhonson</div>
+                <span class="online-dot" id="chatDot"></span>
+              </div>
+              <div class="chat-subtitle" id="chatSubtitle">Junior Developer</div>
+            </div>
+          </div>
+          <button type="button" class="details-toggle" id="detailsToggle" aria-label="Open contact details" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 10v6"></path>
+              <path d="M12 7h.01"></path>
+            </svg>
+          </button>
         </div>
-      </div>
-      <div class="terms-section">
-        <h4>Data Privacy</h4>
-        <p>Personal data and sensitive research content are handled according to university privacy policies.</p>
-        <div class="terms-list">
-          <div class="terms-item">Access levels are assigned by role and approval.</div>
-          <div class="terms-item">Sensitive data may be redacted or restricted.</div>
-          <div class="terms-item">Audit logs are maintained for compliance.</div>
+
+        <div class="chat-body">
+          <div class="chat-thread active" data-thread-panel="dianne">
+            <div class="bubble-row">
+              <div class="bubble-avatar">DJ</div>
+              <div class="bubble">Hi David, have you got the project report pdf?</div>
+            </div>
+            <div class="bubble-row mine">
+              <div class="bubble">NO. I did not get it</div>
+              <div class="bubble-avatar">JV</div>
+            </div>
+            <div class="day-divider">Yesterday</div>
+            <div class="bubble-row">
+              <div class="bubble-avatar">DJ</div>
+              <div class="bubble">Ok, I will just send it here. Plz be sure to fill the details by today end of the day.</div>
+            </div>
+            <div class="bubble-row">
+              <div class="bubble-avatar">DJ</div>
+              <div class="bubble file-bubble"><span class="file-thumb"></span><span>project_report.pdf</span></div>
+            </div>
+            <div class="bubble-row mine">
+              <div class="bubble">Ok. Should I send it over email as well after filling the details.</div>
+              <div class="bubble-avatar">JV</div>
+            </div>
+            <div class="bubble-row">
+              <div class="bubble-avatar">DJ</div>
+              <div class="bubble">Ya. I will be adding more team members to it.</div>
+            </div>
+            <div class="bubble-row mine">
+              <div class="bubble">OK</div>
+              <div class="bubble-avatar">JV</div>
+            </div>
+          </div>
+
+          <div class="chat-thread" data-thread-panel="lisa">
+            <div class="bubble-row">
+              <div class="bubble-avatar">LR</div>
+              <div class="bubble">Hi, are you available tomorrow for a quick review of the revised abstract?</div>
+            </div>
+            <div class="bubble-row mine">
+              <div class="bubble">Yes, I can join in the morning. Please send the final time.</div>
+              <div class="bubble-avatar">JV</div>
+            </div>
+          </div>
+
+          <div class="chat-thread" data-thread-panel="jamie">
+            <div class="bubble-row">
+              <div class="bubble-avatar">JT</div>
+              <div class="bubble">Nice one. I will do it tomorrow and update the panel tracker.</div>
+            </div>
+            <div class="bubble-row mine">
+              <div class="bubble">Thanks. I will wait for your note before I upload the final copy.</div>
+              <div class="bubble-avatar">JV</div>
+            </div>
+          </div>
+
+          <div class="chat-thread" data-thread-panel="jason">
+            <div class="bubble-row">
+              <div class="bubble-avatar">JR</div>
+              <div class="bubble">That's great. I am looking forward to having a great start once the archive release is approved.</div>
+            </div>
+          </div>
+
+          <div class="chat-thread" data-thread-panel="amy">
+            <div class="bubble-row">
+              <div class="bubble-avatar">AF</div>
+              <div class="bubble">Hi, without just working on the chat app right now? We still need the signed intake sheet.</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="terms-section">
-        <h4>Service Availability</h4>
-        <p>The system may undergo scheduled maintenance with advance notice to users.</p>
-        <div class="terms-list">
-          <div class="terms-item">Outages are communicated through the Support page.</div>
-          <div class="terms-item">Deadlines may be extended at department discretion.</div>
-          <div class="terms-item">Reports can be filed for technical incidents.</div>
+
+        <form class="composer" id="messageForm">
+          <div class="composer-input-wrap">
+            <button type="button" class="attach-button" aria-label="Attach file">
+              <svg viewBox="0 0 24 24">
+                <path d="M9.5 16.5l6.9-6.9a3 3 0 0 0-4.24-4.24l-7.42 7.42a4.5 4.5 0 0 0 6.36 6.36l7.07-7.07"/>
+              </svg>
+            </button>
+            <input class="composer-input" id="messageInput" type="text" placeholder="Write Something...">
+          </div>
+          <button class="send-button" type="submit">Send</button>
+        </form>
+      </section>
+
+      <aside class="details-panel">
+        <div class="detail-profile">
+          <div class="detail-avatar" id="detailAvatar">DJ</div>
+          <div class="detail-name" id="detailName">Dianne Jhonson</div>
+          <div class="detail-role" id="detailRole">Junior Developer</div>
         </div>
-      </div>
-      <div class="terms-section">
-        <h4>Policy Updates</h4>
-        <p>Terms may be revised to reflect changes in academic, privacy, or security requirements.</p>
-        <div class="terms-list">
-          <div class="terms-item">Major updates are announced to all users.</div>
-          <div class="terms-item">Continued use indicates acceptance of changes.</div>
-          <div class="terms-item">Archived versions are kept for reference.</div>
+
+        <div class="detail-links">
+          <div class="detail-link">+ <span id="detailNoteOne">View Friends</span></div>
+          <div class="detail-link">Fav <span id="detailNoteTwo">Add to Favorites</span></div>
         </div>
-      </div>
-      <div class="terms-section">
-        <h4>Contact & Appeals</h4>
-        <p>Questions or disputes should be addressed through official channels.</p>
-        <div class="terms-list">
-          <div class="terms-item">Submit concerns via the Support Center.</div>
-          <div class="terms-item">Appeals are reviewed by the academic office.</div>
-          <div class="terms-item">Policy clarification is available on request.</div>
+
+        <div class="attachments">
+          <h4>Attachments</h4>
+          <div class="attachment-grid">
+            <div class="attachment-item"><span class="attachment-icon">PDF</span>PDF</div>
+            <div class="attachment-item"><span class="attachment-icon">VID</span>VIDEO</div>
+            <div class="attachment-item"><span class="attachment-icon">AUD</span>MP3</div>
+            <div class="attachment-item"><span class="attachment-icon">IMG</span>IMAGE</div>
+          </div>
         </div>
-      </div>
+
+        <button type="button" class="view-all">View All</button>
+      </aside>
     </section>
   </div>
 </div>
@@ -1029,6 +1462,127 @@
   }
   updateDateTime();
   setInterval(updateDateTime, 30000);
+  const threadCards = Array.from(document.querySelectorAll('[data-thread]'));
+  const threadPanels = Array.from(document.querySelectorAll('[data-thread-panel]'));
+  const chatName = document.getElementById('chatName');
+  const chatSubtitle = document.getElementById('chatSubtitle');
+  const chatAvatar = document.getElementById('chatAvatar');
+  const detailAvatar = document.getElementById('detailAvatar');
+  const detailName = document.getElementById('detailName');
+  const detailRole = document.getElementById('detailRole');
+  const detailNoteOne = document.getElementById('detailNoteOne');
+  const detailNoteTwo = document.getElementById('detailNoteTwo');
+  const messageForm = document.getElementById('messageForm');
+  const messageInput = document.getElementById('messageInput');
+  const messengerShell = document.getElementById('messengerShell');
+  const detailsToggle = document.getElementById('detailsToggle');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+  function syncSidebarState() {
+    if (!sidebarToggle) return;
+    const isMobile = window.innerWidth <= 1024;
+    const isOpen = isMobile ? document.body.classList.contains('sidebar-open') : !document.body.classList.contains('sidebar-collapsed');
+    sidebarToggle.setAttribute('aria-expanded', String(isOpen));
+    sidebarToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+  }
+
+  function closeSidebarOnMobile() {
+    document.body.classList.remove('sidebar-open');
+    syncSidebarState();
+  }
+
+  function syncDetailsToggle() {
+    if (!messengerShell || !detailsToggle) return;
+    const isHidden = messengerShell.classList.contains('details-hidden');
+    detailsToggle.setAttribute('aria-expanded', String(!isHidden));
+    detailsToggle.setAttribute('aria-label', isHidden ? 'Open contact details' : 'Close contact details');
+  }
+
+  function activateThread(threadId) {
+    const activeCard = threadCards.find((card) => card.dataset.thread === threadId);
+    if (!activeCard) return;
+
+    threadCards.forEach((card) => {
+      card.classList.toggle('active', card === activeCard);
+    });
+
+    threadPanels.forEach((panel) => {
+      panel.classList.toggle('active', panel.dataset.threadPanel === threadId);
+    });
+
+    chatName.textContent = activeCard.dataset.threadName;
+    chatSubtitle.textContent = activeCard.dataset.threadRole;
+    chatAvatar.textContent = activeCard.dataset.threadAvatar;
+    detailAvatar.textContent = activeCard.dataset.threadAvatar;
+    detailName.textContent = activeCard.dataset.threadName;
+    detailRole.textContent = activeCard.dataset.threadRole;
+    detailNoteOne.textContent = activeCard.dataset.threadNote1;
+    detailNoteTwo.textContent = activeCard.dataset.threadNote2;
+  }
+
+  threadCards.forEach((card) => {
+    card.addEventListener('click', () => activateThread(card.dataset.thread));
+  });
+
+  if (detailsToggle && messengerShell) {
+    detailsToggle.addEventListener('click', () => {
+      messengerShell.classList.toggle('details-hidden');
+      syncDetailsToggle();
+    });
+    syncDetailsToggle();
+  }
+
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) {
+        document.body.classList.toggle('sidebar-open');
+      } else {
+        document.body.classList.toggle('sidebar-collapsed');
+      }
+      syncSidebarState();
+    });
+    syncSidebarState();
+  }
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeSidebarOnMobile);
+  }
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1024) {
+      document.body.classList.remove('sidebar-open');
+    }
+    syncSidebarState();
+  });
+
+  if (messageForm && messageInput) {
+    messageForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      const activePanel = document.querySelector('.chat-thread.active');
+      if (!activePanel) return;
+
+      const row = document.createElement('div');
+      row.className = 'bubble-row mine';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'bubble-avatar';
+      avatar.textContent = 'JV';
+
+      row.appendChild(bubble);
+      row.appendChild(avatar);
+      activePanel.appendChild(row);
+      activePanel.parentElement.scrollTop = activePanel.parentElement.scrollHeight;
+      messageInput.value = '';
+    });
+  }
 
     const roleProfiles = {
     student: {
@@ -1053,7 +1607,7 @@
       avatarBg: 'linear-gradient(135deg,var(--sky),var(--maroon))'
     }
   };
-  const activeRole = 'faculty';
+  const activeRole = 'vpaa';
   const profile = roleProfiles[activeRole];
 
   document.querySelectorAll('[data-profile-initials]').forEach((el) => {
@@ -1074,21 +1628,6 @@
   const notifPanel = document.getElementById('notifPanel');
   const profileBtn = document.getElementById('profileBtn');
   const profilePanel = document.getElementById('profilePanel');
-  const sidebarToggle = document.getElementById('sidebarToggle');
-  const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-  function syncSidebarState() {
-    if (!sidebarToggle) return;
-    const isMobile = window.innerWidth <= 1024;
-    const isOpen = isMobile ? document.body.classList.contains('sidebar-open') : !document.body.classList.contains('sidebar-collapsed');
-    sidebarToggle.setAttribute('aria-expanded', String(isOpen));
-    sidebarToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
-  }
-
-  function closeSidebarOnMobile() {
-    document.body.classList.remove('sidebar-open');
-    syncSidebarState();
-  }
 
   function setPanelState(btn, panel, isOpen) {
     if (!btn || !panel) return;
@@ -1129,29 +1668,6 @@
     });
   }
 
-  if (sidebarToggle) {
-    sidebarToggle.addEventListener('click', () => {
-      if (window.innerWidth <= 1024) {
-        document.body.classList.toggle('sidebar-open');
-      } else {
-        document.body.classList.toggle('sidebar-collapsed');
-      }
-      syncSidebarState();
-    });
-    syncSidebarState();
-  }
-
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener('click', closeSidebarOnMobile);
-  }
-
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 1024) {
-      document.body.classList.remove('sidebar-open');
-    }
-    syncSidebarState();
-  });
-
   document.addEventListener('click', (event) => {
     const isDropdown = event.target.closest('.topbar-dropdown');
     if (!isDropdown) closeAllPanels();
@@ -1161,22 +1677,8 @@
     if (event.key === 'Escape') closeAllPanels();
   });
 </script>
-<button type="button" class="ai-chatbot-fab" aria-label="Open AI chatbot">
-  <svg viewBox="0 0 64 64" aria-hidden="true">
-    <path class="bot-fill" d="M32 11c-11.9 0-21.5 9.4-21.5 21v8.1c0 4.2 3.4 7.7 7.7 7.7h1.2c1.2 0 2-.9 2-2 0-.5-.2-1-.5-1.4-2.2-2.8-3.4-6.2-3.4-9.9 0-8.8 6.5-15.2 14.5-15.2s14.5 6.4 14.5 15.2V35h-3.2c-1 0-1.9.8-1.9 1.9v2.5c0 3.1-2.5 5.6-5.6 5.6h-7.6c-1.3 0-2.4 1.1-2.4 2.4v2.2c0 1.3 1.1 2.4 2.4 2.4h8.1c6.2 0 11.2-5 11.2-11.2v-.6h.8c4.2 0 7.7-3.4 7.7-7.7V32c0-11.6-9.6-21-21.5-21z"></path>
-    <rect class="bot-fill" x="7.5" y="27.5" width="7.8" height="18.7" rx="3.9"></rect>
-    <rect class="bot-fill" x="48.7" y="27.5" width="7.8" height="18.7" rx="3.9"></rect>
-    <path class="bot-fill" d="M24.6 25.6c2.4-1.5 4.8-2.1 7.4-2.1 2.7 0 5.2.7 7.7 2.2 1.5 1 2.3 2.8 2 4.6l-1.5 9c-.3 1.9-1.9 3.2-3.8 3.2H27.7c-1.9 0-3.5-1.4-3.8-3.2l-1.5-8.9c-.3-1.9.5-3.8 2.2-4.8z"></path>
-    <circle class="bot-cut" cx="27.7" cy="33.2" r="2.3"></circle>
-    <circle class="bot-cut" cx="36.3" cy="33.2" r="2.3"></circle>
-    <path class="bot-fill" d="M20.1 47.1c-.9 0-1.7-.7-1.7-1.7s.7-1.7 1.7-1.7h5.2c.9 0 1.7.7 1.7 1.7s-.7 1.7-1.7 1.7h-5.2z"></path>
-  </svg>
-</button>
 </body>
 </html>
-
-
-
 
 
 
