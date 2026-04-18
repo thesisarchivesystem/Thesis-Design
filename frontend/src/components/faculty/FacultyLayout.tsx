@@ -71,7 +71,6 @@ export default function FacultyLayout({ title, description, children, hidePageIn
   }, [location.pathname]);
 
   const isManageThesisRoute = location.pathname.startsWith('/faculty/manage-thesis');
-  const shouldHighlightManageThesisOnly = manageThesisOpen && !isManageThesisRoute;
 
   const initials = useMemo(() => {
     if (!user?.name) return 'FA';
@@ -112,13 +111,13 @@ export default function FacultyLayout({ title, description, children, hidePageIn
 
         <nav className="vpaa-sidebar-nav">
           <span className="vpaa-nav-section-label">Main</span>
-          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive && !shouldHighlightManageThesisOnly ? ' active' : ''}`} to="/faculty/dashboard"><Home size={20} /><span>Home</span></NavLink>
-          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive && !shouldHighlightManageThesisOnly ? ' active' : ''}`} to="/faculty/categories"><Shapes size={20} /><span>Categories</span></NavLink>
-          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive && !shouldHighlightManageThesisOnly ? ' active' : ''}`} to="/faculty/students"><Upload size={20} /><span>Add Files</span></NavLink>
+          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive ? ' active' : ''}`} to="/faculty/dashboard"><Home size={20} /><span>Home</span></NavLink>
+          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive ? ' active' : ''}`} to="/faculty/categories"><Shapes size={20} /><span>Categories</span></NavLink>
+          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive ? ' active' : ''}`} to="/faculty/students"><Upload size={20} /><span>Add Files</span></NavLink>
           <div className={`vpaa-nav-group${manageThesisOpen ? ' open' : ''}`}>
             <button
               type="button"
-              className={`vpaa-nav-item vpaa-nav-group-toggle${shouldHighlightManageThesisOnly ? ' active' : ''}`}
+              className={`vpaa-nav-item vpaa-nav-group-toggle${manageThesisOpen && !isManageThesisRoute ? ' active' : ''}`}
               onClick={() => setManageThesisOpen((current) => !current)}
               aria-expanded={manageThesisOpen}
               aria-controls="faculty-manage-thesis-submenu"
@@ -139,8 +138,8 @@ export default function FacultyLayout({ title, description, children, hidePageIn
           </div>
 
           <span className="vpaa-nav-section-label">Activity</span>
-          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive && !shouldHighlightManageThesisOnly ? ' active' : ''}`} to="/faculty/activity-log"><FileClock size={20} /><span>Activity Log</span></NavLink>
-          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive && !shouldHighlightManageThesisOnly ? ' active' : ''}`} to="/faculty/my-advisees"><Users size={20} /><span>My Advisees</span></NavLink>
+          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive ? ' active' : ''}`} to="/faculty/activity-log"><FileClock size={20} /><span>Activity Log</span></NavLink>
+          <NavLink className={({ isActive }) => `vpaa-nav-item${isActive ? ' active' : ''}`} to="/faculty/my-advisees"><Users size={20} /><span>My Advisees</span></NavLink>
         </nav>
 
         <div className="vpaa-sidebar-footer">
@@ -168,9 +167,9 @@ export default function FacultyLayout({ title, description, children, hidePageIn
               <span className="vpaa-topbar-info-item"><FileText size={15} /><span>{currentDate}</span></span>
             </div>
 
-            <Link to="/faculty/messages" className="vpaa-topbar-icon-btn" aria-label="Messages">
+            <button type="button" className="vpaa-topbar-icon-btn" aria-label="Messages">
               <MessageSquare size={18} />
-            </Link>
+            </button>
             <button type="button" className="vpaa-topbar-icon-btn" aria-label="Notifications">
               <Bell size={18} />
               <span className="vpaa-notif-dot" />
