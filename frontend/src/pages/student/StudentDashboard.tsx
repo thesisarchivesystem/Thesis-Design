@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 import StudentLayout from '../../components/student/StudentLayout';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -12,11 +13,13 @@ export default function StudentDashboard() {
   const [recentTheses, setRecentTheses] = useState<StudentDashboardThesis[]>([]);
   const [topSearches, setTopSearches] = useState<StudentDashboardThesis[]>([]);
   const [quote, setQuote] = useState<StudentDailyQuote | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role !== 'student') return;
 
+    setLoading(true);
     setError(null);
 
     void studentDashboardService.getDashboard()
@@ -31,6 +34,9 @@ export default function StudentDashboard() {
         setTopSearches([]);
         setQuote(null);
         setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [user?.role]);
 
@@ -57,7 +63,12 @@ export default function StudentDashboard() {
         <p>Here&apos;s an overview of the thesis archive activity and your quick access tools.</p>
       </div>
 
-      {error ? (
+      {loading ? (
+        <div className="vpaa-card" style={{ display: 'grid', placeItems: 'center', minHeight: 280, gap: 12 }}>
+          <LoaderCircle size={28} className="animate-spin" />
+          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Loading dashboard...</p>
+        </div>
+      ) : error ? (
         <div className="vpaa-banner-error">{error}</div>
       ) : (
         <>
