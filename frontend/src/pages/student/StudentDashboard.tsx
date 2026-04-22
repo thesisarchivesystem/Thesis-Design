@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, LoaderCircle } from 'lucide-react';
+import { Activity, FilePlus2, LoaderCircle } from 'lucide-react';
 import StudentLayout from '../../components/student/StudentLayout';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -80,19 +80,19 @@ export default function StudentDashboard() {
 
   return (
     <StudentLayout
-      title={<><span>Welcome back, </span><em>{firstName}</em></>}
+      title={<><span>Welcome back, </span><em>{firstName}</em>!</>}
       description="Here&apos;s an overview of the thesis archive activity and your quick access tools."
       hidePageIntro
     >
       <div className="vpaa-page-intro">
-        <h1><span>Welcome back, </span><em>{firstName}</em></h1>
+        <h1><span>Welcome back, </span><em>{firstName}</em> !</h1>
         <p>Here&apos;s an overview of the thesis archive activity and your quick access tools.</p>
       </div>
 
       {loading ? (
         <div className="vpaa-card" style={{ display: 'grid', placeItems: 'center', minHeight: 280, gap: 12 }}>
           <LoaderCircle size={28} className="animate-spin" />
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Loading dashboard...</p>
+          <p className="vpaa-loading-copy">Loading dashboard...</p>
         </div>
       ) : error ? (
         <div className="vpaa-banner-error">{error}</div>
@@ -128,7 +128,7 @@ export default function StudentDashboard() {
 
           <div className="vpaa-card vpaa-dashboard-panel">
             <div className="vpaa-dashboard-head">
-              <h3><Activity size={16} /> Recently Added</h3>
+              <h3><FilePlus2 size={16} /> Recently Added</h3>
               <span>Show All -&gt;</span>
             </div>
 

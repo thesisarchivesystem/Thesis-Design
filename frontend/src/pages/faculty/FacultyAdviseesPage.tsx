@@ -159,7 +159,7 @@ export default function FacultyAdviseesPage() {
   const stats = [
     { label: 'Total Advisees', value: summary?.total_advisees ?? 0, icon: <Users2 size={20} />, tone: 'si-sky' },
     { label: 'Active Proposals', value: summary?.active_proposals ?? 0, icon: <Clock3 size={20} />, tone: 'si-gold' },
-    { label: 'For Defense', value: summary?.for_defense ?? 0, icon: <CheckCircle2 size={20} />, tone: 'si-sage' },
+    { label: 'Archived', value: summary?.for_defense ?? 0, icon: <CheckCircle2 size={20} />, tone: 'si-sage' },
     { label: 'Needs Guidance', value: summary?.needs_guidance ?? 0, icon: <Upload size={20} />, tone: 'si-terracotta' },
     { label: 'New This Term', value: summary?.new_this_term ?? 0, icon: <UserPlus size={20} />, tone: 'si-maroon' },
   ];

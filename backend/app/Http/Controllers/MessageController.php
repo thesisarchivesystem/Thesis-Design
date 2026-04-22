@@ -8,6 +8,7 @@ use App\Models\StudentProfile;
 use App\Models\User;
 use App\Services\AblyService;
 use App\Services\ActivityLogService;
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class MessageController extends Controller
     public function __construct(
         private AblyService $ably,
         private ActivityLogService $logger,
+        private NotificationService $notifications,
     ) {}
 
     public function contacts(Request $request): JsonResponse
@@ -68,7 +70,9 @@ class MessageController extends Controller
 
         $conversations = $query->get()->map(function (Conversation $conversation) {
             $payload = $conversation->toArray();
-            $payload['last_message'] = $conversation->latestMessage?->toArray();
+            $payload['last_message'] = $conversation->latestMessage
+                ? $this->serializeMessage($conversation->latestMessage)
+                : null;
             unset($payload['latest_message']);
 
             return $payload;
@@ -100,7 +104,9 @@ class MessageController extends Controller
         ]);
 
         $data = $conversation->toArray();
-        $data['last_message'] = $conversation->latestMessage?->toArray();
+        $data['last_message'] = $conversation->latestMessage
+            ? $this->serializeMessage($conversation->latestMessage)
+            : null;
         unset($data['latest_message']);
 
         return response()->json(['data' => $data], 201);
@@ -114,7 +120,9 @@ class MessageController extends Controller
         $messages = Message::where('conversation_id', $conversationId)
             ->with('sender:id,name,email,avatar_url,role')
             ->orderBy('created_at')
-            ->get();
+            ->get()
+            ->map(fn (Message $message) => $this->serializeMessage($message))
+            ->values();
 
         Message::where('conversation_id', $conversationId)
             ->where('receiver_id', $user->id)
@@ -158,14 +166,23 @@ class MessageController extends Controller
 
         $message->load('sender:id,name,email,avatar_url,role');
 
-        $this->ably->publishMessage($conversation->id, $message->toArray());
-        $this->ably->publishNotification($receiver->id, 'notification.new', [
-            'type' => 'new_message',
-            'title' => 'New message from ' . $sender->name,
-            'body' => substr($request->body ?? 'Sent an attachment', 0, 80),
-        ]);
+        $serializedMessage = $this->serializeMessage($message);
 
-        return response()->json(['data' => $message], 201);
+        $this->ably->publishMessage($conversation->id, $serializedMessage);
+        $this->notifications->notify(
+            $receiver,
+            'new_message',
+            'New message from ' . $sender->name,
+            substr($request->body ?? 'Sent an attachment', 0, 80),
+            [
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+                'sender_id' => $sender->id,
+                'sender_role' => $sender->role,
+            ],
+        );
+
+        return response()->json(['data' => $serializedMessage], 201);
     }
 
     private function uploadToSupabase(\Illuminate\Http\UploadedFile $file, string $folder): array
@@ -206,6 +223,58 @@ class MessageController extends Controller
             'path' => $path,
             'url' => "{$supabaseUrl}/storage/v1/object/public/{$bucket}/{$path}",
         ];
+    }
+
+    private function serializeMessage(Message $message): array
+    {
+        $payload = $message->toArray();
+        $payload['attachment_access_url'] = $message->attachment_url
+            ? $this->createSignedSupabaseUrl($message->attachment_url)
+            : null;
+
+        return $payload;
+    }
+
+    private function createSignedSupabaseUrl(string $url, int $expiresIn = 3600): ?string
+    {
+        $supabaseUrl = rtrim((string) config('services.supabase.url'), '/');
+        $serviceKey = (string) config('services.supabase.service_key');
+        $bucket = (string) config('services.supabase.bucket');
+
+        if ($supabaseUrl === '' || $serviceKey === '' || $bucket === '') {
+            throw new \RuntimeException('Supabase storage is not configured.');
+        }
+
+        $publicPrefix = "{$supabaseUrl}/storage/v1/object/public/{$bucket}/";
+        $privatePrefix = "{$supabaseUrl}/storage/v1/object/{$bucket}/";
+
+        if (str_starts_with($url, $publicPrefix)) {
+            $path = substr($url, strlen($publicPrefix));
+        } elseif (str_starts_with($url, $privatePrefix)) {
+            $path = substr($url, strlen($privatePrefix));
+        } else {
+            return null;
+        }
+
+        $response = Http::withHeaders([
+            'apikey' => $serviceKey,
+            'Authorization' => 'Bearer ' . $serviceKey,
+        ])->post("{$supabaseUrl}/storage/v1/object/sign/{$bucket}/{$path}", [
+            'expiresIn' => $expiresIn,
+        ]);
+
+        if ($response->failed()) {
+            return null;
+        }
+
+        $signedPath = $response->json('signedURL');
+        if (!is_string($signedPath) || trim($signedPath) === '') {
+            return null;
+        }
+
+        return str_starts_with($signedPath, 'http')
+            ? $signedPath
+            : "{$supabaseUrl}/storage/v1{$signedPath}";
     }
 
     private function allowedContactsQuery(User $user): Builder

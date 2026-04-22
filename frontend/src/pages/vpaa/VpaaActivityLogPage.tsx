@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Clock3, List, RefreshCw, Search, SquareSplitVertical, Users2 } from 'lucide-react';
+import { CheckCircle2, Clock3, RefreshCw, Search, SquareSplitVertical, Users2 } from 'lucide-react';
 import VpaaLayout from '../../components/vpaa/VpaaLayout';
 import { vpaaDashboardService, type VpaaActivityLogResponse, type VpaaActivityRow } from '../../services/vpaaDashboardService';
 
@@ -9,8 +9,7 @@ const ACTIVITY_PAGE_SIZE = 10;
 const defaultSummary = {
   actions_today: 0,
   approvals: 0,
-  files_shared: 0,
-  notes_added: 0,
+  account_updates: 0,
   last_activity: 'No recent activity',
 };
 
@@ -139,25 +138,31 @@ export default function VpaaActivityLogPage() {
     }
   }, [currentPage, totalPages]);
 
+  const formatRoleLabel = (role?: string) => {
+    if (!role) return 'System';
+    if (role.toLowerCase() === 'vpaa') return 'VPAA';
+    if (role.toLowerCase() === 'system') return 'System';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
   const summaryCards = [
-    { label: 'Actions Today', value: activityData?.summary.actions_today ?? defaultSummary.actions_today, icon: <Clock3 size={20} />, tone: 'si-sky' },
-    { label: 'Approvals', value: activityData?.summary.approvals ?? defaultSummary.approvals, icon: <CheckCircle2 size={20} />, tone: 'si-sage' },
-    { label: 'Files Shared', value: activityData?.summary.files_shared ?? defaultSummary.files_shared, icon: <Users2 size={20} />, tone: 'si-maroon' },
-    { label: 'Notes Added', value: activityData?.summary.notes_added ?? defaultSummary.notes_added, icon: <List size={20} />, tone: 'si-terracotta' },
-    { label: 'Last Activity', value: activityData?.summary.last_activity ?? defaultSummary.last_activity, icon: <Clock3 size={20} />, tone: 'si-gold' },
+    { label: 'Actions Today', value: activityData?.summary.actions_today ?? defaultSummary.actions_today, icon: <Clock3 size={18} />, tone: 'phi-blue' },
+    { label: 'Approvals', value: activityData?.summary.approvals ?? defaultSummary.approvals, icon: <CheckCircle2 size={18} />, tone: 'phi-green' },
+    { label: 'Account Updates', value: activityData?.summary.account_updates ?? defaultSummary.account_updates, icon: <Users2 size={18} />, tone: 'phi-maroon' },
+    { label: 'Last Activity', value: activityData?.summary.last_activity ?? defaultSummary.last_activity, icon: <Clock3 size={18} />, tone: 'phi-gold' },
   ];
 
   return (
     <VpaaLayout title="Activity Log" description="Track approvals, faculty account updates, and policy changes across departments.">
-      <div className="vpaa-grid-5" style={{ marginBottom: 28 }}>
+      <div className="vpaa-grid-4 student-submissions-stats vpaa-activity-summary-grid" style={{ marginBottom: 28 }}>
         {summaryCards.map((card) => (
-          <div className="vpaa-card vpaa-stat-card" key={card.label}>
+          <article className="student-submissions-stat-card vpaa-card vpaa-activity-summary-card" key={card.label}>
             <div>
-              <div className="vpaa-stat-label">{card.label}</div>
-              <div className="vpaa-stat-value">{card.value}</div>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
             </div>
-            <div className={`vpaa-stat-icon ${card.tone}`}>{card.icon}</div>
-          </div>
+            <span className={`student-submissions-stat-icon ${card.tone}`}>{card.icon}</span>
+          </article>
         ))}
       </div>
 
@@ -172,7 +177,6 @@ export default function VpaaActivityLogPage() {
               <RefreshCw size={15} className={refreshing ? 'spin' : ''} />
               <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
             </button>
-            <button type="button" className="recent-see-all">Export Log ?</button>
           </div>
         </div>
 
@@ -228,9 +232,9 @@ export default function VpaaActivityLogPage() {
                 <th>Activity</th>
                 <th>Request / Record</th>
                 <th>Account</th>
+                <th>Role</th>
                 <th>Department</th>
                 <th>Time</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -239,9 +243,9 @@ export default function VpaaActivityLogPage() {
                   <td><span className={`status-badge ${toneClassMap[entry.tone]}`}>{entry.badge}</span></td>
                   <td className="rt-title">{entry.request_record}</td>
                   <td>{entry.account}</td>
+                  <td>{formatRoleLabel(entry.role)}</td>
                   <td>{entry.department}</td>
                   <td>{formatRelativeTime(entry.timestamp)}</td>
-                  <td className="table-actions"><button type="button" className="btn-review">{entry.action}</button></td>
                 </tr>
               )) : (
                 <tr>
@@ -254,26 +258,25 @@ export default function VpaaActivityLogPage() {
 
         {filteredLogs.length > ACTIVITY_PAGE_SIZE ? (
           <div className="vpaa-pagination">
-            <span className="vpaa-pagination-meta">
-              Showing {(currentPage - 1) * ACTIVITY_PAGE_SIZE + 1}-{Math.min(currentPage * ACTIVITY_PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
-            </span>
             <div className="vpaa-pagination-actions">
               <button
                 type="button"
-                className="recent-see-all"
+                className="vpaa-pagination-arrow"
                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                 disabled={currentPage === 1}
+                aria-label="Previous page"
               >
-                Previous
+                &lt;
               </button>
               <span className="vpaa-pagination-page">Page {currentPage} of {totalPages}</span>
               <button
                 type="button"
-                className="recent-see-all"
+                className="vpaa-pagination-arrow"
                 onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                 disabled={currentPage === totalPages}
+                aria-label="Next page"
               >
-                Next
+                &gt;
               </button>
             </div>
           </div>

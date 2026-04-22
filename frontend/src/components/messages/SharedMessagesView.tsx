@@ -139,6 +139,20 @@ const getAttachmentLabel = (url?: string) => {
   return 'FILE';
 };
 
+const getAttachmentFileName = (url?: string) => {
+  if (!url) return 'Attachment';
+
+  const rawFileName = url.split('/').pop()?.split('?')[0] || 'Attachment';
+
+  try {
+    return decodeURIComponent(rawFileName);
+  } catch {
+    return rawFileName;
+  }
+};
+
+const getAttachmentHref = (message: Message) => message.attachment_access_url || message.attachment_url || '#';
+
 const hydrateConversationContact = (
   conversation: Conversation,
   currentUser: User | null | undefined,
@@ -364,9 +378,9 @@ export default function SharedMessagesView() {
       .filter((message) => Boolean(message.attachment_url))
       .map((message) => ({
         id: message.id,
-        url: message.attachment_url as string,
+        url: getAttachmentHref(message),
         label: getAttachmentLabel(message.attachment_url),
-        fileName: message.attachment_url?.split('/').pop()?.split('?')[0] || 'Attachment',
+        fileName: getAttachmentFileName(message.attachment_url),
       })),
     [messages],
   );
@@ -642,7 +656,7 @@ export default function SharedMessagesView() {
                       const messageSender = isMine ? user : message.sender;
                       const messageSenderRole = isMine ? user?.role : message.sender?.role;
                       const hasAttachment = Boolean(message.attachment_url);
-                      const attachmentLabel = message.attachment_url?.split('/').pop() || 'Attachment';
+                      const attachmentLabel = getAttachmentFileName(message.attachment_url);
 
                       return (
                         <div key={group.key} className={`vpaa-bubble-row${isMine ? ' mine' : ''}`}>
@@ -651,7 +665,7 @@ export default function SharedMessagesView() {
                           <div className={`vpaa-bubble${hasAttachment ? ' file-bubble' : ''}`}>
                             {message.body ? <span>{message.body}</span> : null}
                             {hasAttachment ? (
-                              <a href={message.attachment_url} target="_blank" rel="noreferrer" className="vpaa-message-attachment-link">
+                              <a href={getAttachmentHref(message)} target="_blank" rel="noreferrer" className="vpaa-message-attachment-link">
                                 <span className="vpaa-file-thumb" />
                                 <span>{attachmentLabel}</span>
                               </a>
@@ -697,7 +711,7 @@ export default function SharedMessagesView() {
                     className="vpaa-attach-button"
                     aria-label="Attach file"
                     onClick={() => attachmentInputRef.current?.click()}
-                    disabled={!activeConversationId || sending}
+                    disabled={!canCompose || sending}
                   >
                     <Paperclip size={16} />
                   </button>

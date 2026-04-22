@@ -1,9 +1,14 @@
 export type NotificationType =
   | 'thesis.approved'
+  | 'thesis.archived'
   | 'thesis.rejected'
+  | 'thesis.submitted'
+  | 'thesis.uploaded'
   | 'new_message'
   | 'faculty.created'
-  | 'student.created';
+  | 'student.created'
+  | 'faculty.role_changed'
+  | 'department.file_shared';
 
 export interface AppNotification {
   id: string;

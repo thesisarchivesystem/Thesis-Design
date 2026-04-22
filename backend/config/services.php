@@ -13,4 +13,8 @@ return [
         'service_key' => env('SUPABASE_SERVICE_KEY'),
         'bucket' => env('SUPABASE_STORAGE_BUCKET'),
     ],
+    'zenquotes' => [
+        'base_url' => env('ZENQUOTES_BASE_URL', 'https://zenquotes.io/api'),
+        'key' => env('ZENQUOTES_API_KEY'),
+    ],
 ];

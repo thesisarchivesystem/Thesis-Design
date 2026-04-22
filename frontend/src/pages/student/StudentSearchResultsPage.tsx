@@ -5,7 +5,7 @@ export default function StudentSearchResultsPage() {
   return (
     <StudentLayout
       title="Search the Archive"
-      description="Browse approved thesis records based on your latest search."
+      description="Browse archived thesis records based on your latest search."
     >
       <SharedSearchResultsView />
     </StudentLayout>
