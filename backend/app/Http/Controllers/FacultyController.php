@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DailyQuote;
 use App\Models\ActivityLog;
 use App\Models\FacultyProfile;
 use App\Models\SearchLog;
@@ -11,6 +10,8 @@ use App\Models\Thesis;
 use App\Models\Category;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\DailyQuoteService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -22,7 +23,11 @@ use Illuminate\Validation\Rule;
 
 class FacultyController extends Controller
 {
-    public function __construct(private ActivityLogService $logger) {}
+    public function __construct(
+        private ActivityLogService $logger,
+        private DailyQuoteService $dailyQuoteService,
+        private NotificationService $notifications,
+    ) {}
 
     public function profile(Request $request): JsonResponse
     {
@@ -196,6 +201,12 @@ class FacultyController extends Controller
             'category' => $category->name,
         ]);
 
+        $this->notifyDepartmentFacultyOfSharedFile(
+            $request->user(),
+            $facultyProfile->department,
+            $thesis
+        );
+
         return response()->json([
             'data' => [
                 'id' => $thesis->id,
@@ -297,6 +308,12 @@ class FacultyController extends Controller
             'status' => $status,
         ]);
 
+        $this->notifyDepartmentFacultyOfSharedFile(
+            $request->user(),
+            $facultyProfile->department,
+            $thesis
+        );
+
         return response()->json([
             'data' => [
                 'id' => $thesis->id,
@@ -337,11 +354,7 @@ class FacultyController extends Controller
 
         $topSearches = $this->resolveTopSearches();
 
-        $quote = DailyQuote::query()
-            ->where('is_active', true)
-            ->whereDate('quote_date', now()->toDateString())
-            ->orderByDesc('created_at')
-            ->first();
+        $quote = $this->dailyQuoteService->getTodayQuote();
 
         return response()->json([
             'stats' => [
@@ -686,6 +699,19 @@ class FacultyController extends Controller
 
         $this->logger->log($request->user(), 'faculty.created', 'user', $facultyProfile->user_id);
 
+        User::query()
+            ->where('role', 'vpaa')
+            ->get()
+            ->each(function (User $vpaaUser) use ($facultyProfile) {
+                $this->notifications->notify(
+                    $vpaaUser,
+                    'faculty.created',
+                    'Faculty account created successfully',
+                    $facultyProfile->user?->name,
+                    ['faculty_user_id' => $facultyProfile->user_id],
+                );
+            });
+
         return response()->json(['data' => $facultyProfile->load('user:id,first_name,last_name,name,email,created_at')], 201);
     }
 
@@ -721,6 +747,7 @@ class FacultyController extends Controller
     {
         $faculty = FacultyProfile::with('user')->findOrFail($id);
         $user = $faculty->user;
+        $previousRole = $faculty->faculty_role;
 
         $request->validate([
             'first_name'        => 'required|string|max:255',
@@ -758,6 +785,36 @@ class FacultyController extends Controller
 
         $this->logger->log($request->user(), 'faculty.updated', 'faculty', $faculty->id);
 
+        if ($previousRole !== $faculty->faculty_role) {
+            $this->logger->log($request->user(), 'faculty.role_changed', 'faculty', $faculty->id, [
+                'from' => $previousRole,
+                'to' => $faculty->faculty_role,
+            ]);
+
+            User::query()
+                ->where('role', 'vpaa')
+                ->get()
+                ->each(function (User $vpaaUser) use ($faculty, $previousRole) {
+                    $this->notifications->notify(
+                        $vpaaUser,
+                        'faculty.role_changed',
+                        'Faculty role updated',
+                        sprintf(
+                            '%s: %s to %s',
+                            $faculty->user?->name ?? 'Faculty member',
+                            $previousRole ?: 'Unassigned',
+                            $faculty->faculty_role ?: 'Unassigned'
+                        ),
+                        [
+                            'faculty_profile_id' => $faculty->id,
+                            'faculty_user_id' => $faculty->user_id,
+                            'from' => $previousRole,
+                            'to' => $faculty->faculty_role,
+                        ],
+                    );
+                });
+        }
+
         return response()->json(['data' => $faculty->fresh()->load('user:id,first_name,last_name,name,email,created_at')]);
     }
 
@@ -792,5 +849,27 @@ class FacultyController extends Controller
         }
 
         return response()->json(['csv' => $csv]);
+    }
+
+    private function notifyDepartmentFacultyOfSharedFile(User $actor, string $department, Thesis $thesis): void
+    {
+        User::query()
+            ->where('role', 'faculty')
+            ->where('id', '!=', $actor->id)
+            ->whereHas('faculty', fn ($query) => $query->where('department', $department))
+            ->get()
+            ->each(function (User $facultyUser) use ($actor, $department, $thesis) {
+                $this->notifications->notify(
+                    $facultyUser,
+                    'department.file_shared',
+                    'New file shared in your department',
+                    $thesis->title,
+                    [
+                        'thesis_id' => $thesis->id,
+                        'department' => $department,
+                        'shared_by' => $actor->id,
+                    ],
+                );
+            });
     }
 }

@@ -4,18 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\Category;
-use App\Models\DailyQuote;
 use App\Models\FacultyProfile;
 use App\Models\SearchLog;
 use App\Models\Thesis;
 use App\Models\User;
 use App\Models\VpaaProfile;
+use App\Services\DailyQuoteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class VpaaController extends Controller
 {
+    public function __construct(private DailyQuoteService $dailyQuoteService) {}
+
     public function profile(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -181,7 +183,7 @@ class VpaaController extends Controller
     public function activityLog(Request $request): JsonResponse
     {
         $logs = ActivityLog::with([
-                'user:id,name,avatar_url',
+                'user:id,name,avatar_url,role',
                 'user.faculty:user_id,department',
                 'user.student:user_id,department',
             ])
@@ -200,6 +202,7 @@ class VpaaController extends Controller
 
         $subjectUsers = User::query()
             ->with(['faculty:user_id,department', 'student:user_id,department'])
+            ->select(['id', 'name', 'role'])
             ->whereIn('id', $userIds)
             ->get()
             ->keyBy('id');
@@ -222,6 +225,11 @@ class VpaaController extends Controller
                 ?? $subjectFaculty?->user?->name
                 ?? 'System';
 
+            $accountRole = $log->user?->role
+                ?? $subjectUser?->role
+                ?? ($subjectFaculty ? 'faculty' : null)
+                ?? 'system';
+
             $department = $subjectThesis?->department
                 ?? $subjectFaculty?->department
                 ?? $subjectUser?->faculty?->department
@@ -236,6 +244,7 @@ class VpaaController extends Controller
                 'tone' => $tone,
                 'request_record' => $this->buildActivityRecordLabel($log, $subjectThesis, $subjectUser, $subjectFaculty),
                 'account' => $accountName,
+                'role' => $accountRole,
                 'department' => $department,
                 'time' => $log->created_at?->diffForHumans(),
                 'timestamp' => optional($log->created_at)?->toISOString(),
@@ -246,8 +255,12 @@ class VpaaController extends Controller
         $summary = [
             'actions_today' => ActivityLog::query()->whereDate('created_at', now()->toDateString())->count(),
             'approvals' => ActivityLog::query()->where('action', 'thesis.approved')->count(),
-            'files_shared' => ActivityLog::query()->where('action', 'thesis.submitted')->count(),
-            'notes_added' => ActivityLog::query()->whereIn('action', ['faculty.status_changed', 'faculty.role_changed'])->count(),
+            'account_updates' => ActivityLog::query()->whereIn('action', [
+                'faculty.created',
+                'student.created',
+                'faculty.status_changed',
+                'faculty.role_changed',
+            ])->count(),
             'last_activity' => optional($logs->first()?->created_at)?->diffForHumans(),
         ];
 
@@ -261,11 +274,7 @@ class VpaaController extends Controller
 
     public function dailyQuote(Request $request): JsonResponse
     {
-        $quote = DailyQuote::query()
-            ->where('is_active', true)
-            ->whereDate('quote_date', now()->toDateString())
-            ->orderByDesc('created_at')
-            ->first();
+        $quote = $this->dailyQuoteService->getTodayQuote();
 
         if (!$quote) {
             return response()->json([

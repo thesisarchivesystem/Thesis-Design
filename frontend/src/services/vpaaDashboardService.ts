@@ -15,8 +15,7 @@ export interface ActivityLogEntry {
 export interface VpaaActivitySummary {
   actions_today: number;
   approvals: number;
-  files_shared: number;
-  notes_added: number;
+  account_updates: number;
   last_activity: string;
 }
 
@@ -26,6 +25,7 @@ export interface VpaaActivityRow {
   tone: 'maroon' | 'sky' | 'sage' | 'terracotta' | 'gold';
   request_record: string;
   account: string;
+  role: string;
   department: string;
   time: string;
   timestamp: string;

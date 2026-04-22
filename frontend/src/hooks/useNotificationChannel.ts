@@ -19,13 +19,14 @@ export function useNotificationChannel(userId: string | null) {
       channel?.subscribe((msg: Types.Message) => {
         const payload = (msg.data ?? {}) as Record<string, unknown>;
         addNotification({
-          id: Math.random().toString(36),
+          id: typeof payload.id === 'string' ? payload.id : `${userId}-${msg.id}`,
           user_id: userId,
-          type: (msg.name as NotificationType) || 'new_message',
+          type: ((typeof payload.type === 'string' ? payload.type : msg.name) as NotificationType) || 'new_message',
           title: typeof payload.title === 'string' ? payload.title : 'Notification',
           body: typeof payload.body === 'string' ? payload.body : '',
-          data: payload,
-          created_at: new Date().toISOString(),
+          data: (payload.data as Record<string, unknown>) || payload,
+          read_at: typeof payload.read_at === 'string' ? payload.read_at : undefined,
+          created_at: typeof payload.created_at === 'string' ? payload.created_at : new Date().toISOString(),
         });
       });
     })();

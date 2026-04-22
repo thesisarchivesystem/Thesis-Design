@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Thesis;
 use App\Models\Category;
-use App\Models\Notification;
 use App\Models\RecentlyViewed;
 use App\Models\StudentProfile;
 use App\Services\AblyService;
 use App\Services\ActivityLogService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
@@ -23,6 +23,7 @@ class ThesisController extends Controller
     public function __construct(
         private AblyService $ably,
         private ActivityLogService $logger,
+        private NotificationService $notifications,
     ) {}
 
     public function index(): JsonResponse
@@ -168,6 +169,27 @@ class ThesisController extends Controller
 
         $this->logger->log($request->user(), 'thesis.submitted', 'thesis', $thesis->id);
 
+        $this->notifications->notify(
+            $request->user(),
+            'thesis.uploaded',
+            'Thesis uploaded successfully',
+            $thesis->title,
+            ['thesis_id' => $thesis->id],
+        );
+
+        if ($thesis->adviser) {
+            $this->notifications->notify(
+                $thesis->adviser,
+                'thesis.submitted',
+                'New thesis submitted',
+                $thesis->title,
+                [
+                    'thesis_id' => $thesis->id,
+                    'student_id' => $request->user()->id,
+                ],
+            );
+        }
+
         return response()->json([
             'data' => $thesis->load('submitter:id,name', 'adviser:id,name', 'category:id,name,slug'),
         ]);
@@ -238,18 +260,36 @@ class ThesisController extends Controller
         $eventName = $request->status === 'approved' ? 'thesis.approved' : 'thesis.rejected';
         $notificationTitle = $request->status === 'approved' ? 'Thesis Approved' : 'Thesis Needs Revision';
         $notificationBody = $request->adviser_remarks ?? $request->rejection_reason ?? '';
-        $this->ably->publishNotification($thesis->submitted_by, $eventName, [
-            'thesis_id'    => $thesis->id,
-            'thesis_title' => $thesis->title,
-            'status'       => $request->status,
-            'remarks'      => $request->adviser_remarks,
-            'reason'       => $request->rejection_reason,
-            'title'        => $notificationTitle,
-            'body'         => $notificationBody,
-        ]);
+        $student = $thesis->submitter()->first();
+        if ($student) {
+            $this->notifications->notify(
+                $student,
+                $eventName,
+                $notificationTitle,
+                $notificationBody,
+                [
+                    'thesis_id' => $thesis->id,
+                    'thesis_title' => $thesis->title,
+                    'status' => $request->status,
+                    'remarks' => $request->adviser_remarks,
+                    'reason' => $request->rejection_reason,
+                ],
+            );
+
+            if ($request->status === 'approved') {
+                $this->notifications->notify(
+                    $student,
+                    'thesis.archived',
+                    'Thesis is now archived',
+                    $thesis->title,
+                    ['thesis_id' => $thesis->id],
+                );
+            }
+        }
 
         // ── Save DB notification ─────────────────────────────────
-        Notification::create([
+        if (false) {
+            Notification::create([
             'user_id' => $thesis->submitted_by,
             'type'    => $eventName,
             'title'   => $request->status === 'approved'
@@ -260,6 +300,7 @@ class ThesisController extends Controller
         ]);
 
         // ── Log activity ─────────────────────────────────────────
+        }
         $this->logger->log($request->user(), $eventName, 'thesis', $thesis->id);
 
         return response()->json(['data' => $thesis]);
@@ -369,7 +410,7 @@ class ThesisController extends Controller
             'data' => [
                 'categories' => $data,
             ],
-        ]);
+            ]);
     }
 
     private function formatIsoTimestamp(mixed $value): ?string

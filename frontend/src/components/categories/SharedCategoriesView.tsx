@@ -70,7 +70,7 @@ export default function SharedCategoriesView({ role = null }: SharedCategoriesVi
 
   if (error) return <div className="vpaa-banner-error">{error}</div>;
 
-  if (isLoading) return <div className="vpaa-card">Loading thesis categories from the archive...</div>;
+  if (isLoading) return <div className="vpaa-card vpaa-loading-copy">Loading thesis categories from the archive...</div>;
 
   if (!categories.length) return <div className="vpaa-card">No thesis categories are available yet.</div>;
 

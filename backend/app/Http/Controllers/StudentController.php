@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
-use App\Models\DailyQuote;
 use App\Models\FacultyProfile;
 use App\Models\SearchLog;
 use App\Models\StudentProfile;
 use App\Models\Thesis;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\DailyQuoteService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,7 +19,11 @@ use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
-    public function __construct(private ActivityLogService $logger) {}
+    public function __construct(
+        private ActivityLogService $logger,
+        private DailyQuoteService $dailyQuoteService,
+        private NotificationService $notifications,
+    ) {}
 
     public function advisers(Request $request): JsonResponse
     {
@@ -119,11 +124,7 @@ class StudentController extends Controller
 
         $topSearches = $this->resolveTopSearches();
 
-        $quote = DailyQuote::query()
-            ->where('is_active', true)
-            ->whereDate('quote_date', now()->toDateString())
-            ->orderByDesc('created_at')
-            ->first();
+        $quote = $this->dailyQuoteService->getTodayQuote();
 
         return response()->json([
             'stats' => [
@@ -300,6 +301,17 @@ class StudentController extends Controller
         });
 
         $this->logger->log($request->user(), 'student.created', 'user', $studentProfile->user_id);
+
+        $this->notifications->notify(
+            $request->user(),
+            'student.created',
+            'Student account created successfully',
+            $studentProfile->user?->name,
+            [
+                'student_user_id' => $studentProfile->user_id,
+                'student_profile_id' => $studentProfile->id,
+            ],
+        );
 
         return response()->json(['data' => $studentProfile->load('user:id,name,email')], 201);
     }

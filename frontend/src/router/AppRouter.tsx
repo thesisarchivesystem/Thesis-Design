@@ -40,6 +40,7 @@ import StudentCategoriesPage from '../pages/student/StudentCategoriesPage';
 import StudentDashboard from '../pages/student/StudentDashboard';
 import StudentMessagesPage from '../pages/student/StudentMessagesPage';
 import StudentMySubmissionsPage from '../pages/student/StudentMySubmissionsPage';
+import StudentSubmissionDetailsPage from '../pages/student/StudentSubmissionDetailsPage';
 import StudentRecentlyViewedPage from '../pages/student/StudentRecentlyViewedPage';
 import StudentSearchResultsPage from '../pages/student/StudentSearchResultsPage';
 import StudentAboutPage from '../pages/student/StudentAboutPage';
@@ -69,58 +70,62 @@ export default function AppRouter() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected Routes - VPAA */}
-        <Route element={<ProtectedRoute allowedRoles={['vpaa']} />}>
-          <Route path="/vpaa/dashboard" element={<VpaaDashboard />} />
-          <Route path="/vpaa/categories" element={<VpaaCategoriesPage />} />
-          <Route path="/vpaa/search" element={<VpaaSearchResultsPage />} />
-          <Route path="/vpaa/activity-log" element={<VpaaActivityLogPage />} />
-          <Route path="/vpaa/messages" element={<VpaaMessagesPage />} />
-          <Route path="/vpaa/my-advisees" element={<VpaaAdviseesPage />} />
-          <Route path="/vpaa/about" element={<VpaaAboutPage />} />
-          <Route path="/vpaa/support" element={<VpaaSupportPage />} />
-          <Route path="/vpaa/terms" element={<VpaaTermsPage />} />
-          <Route path="/vpaa/profile" element={<VpaaProfilePage />} />
-          <Route path="/vpaa/settings" element={<VpaaSettingsPage />} />
-          <Route path="/vpaa/faculty" element={<Navigate to="/vpaa/my-advisees" replace />} />
-          <Route path="/vpaa/*" element={<Navigate to="/vpaa/dashboard" replace />} />
+        <Route path="/vpaa" element={<ProtectedRoute allowedRoles={['vpaa']} />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<VpaaDashboard />} />
+          <Route path="categories" element={<VpaaCategoriesPage />} />
+          <Route path="search" element={<VpaaSearchResultsPage />} />
+          <Route path="activity-log" element={<VpaaActivityLogPage />} />
+          <Route path="messages" element={<VpaaMessagesPage />} />
+          <Route path="my-advisees" element={<VpaaAdviseesPage />} />
+          <Route path="about" element={<VpaaAboutPage />} />
+          <Route path="support" element={<VpaaSupportPage />} />
+          <Route path="terms" element={<VpaaTermsPage />} />
+          <Route path="profile" element={<VpaaProfilePage />} />
+          <Route path="settings" element={<VpaaSettingsPage />} />
+          <Route path="faculty" element={<Navigate to="/vpaa/my-advisees" replace />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 
         {/* Protected Routes - Faculty */}
-        <Route element={<ProtectedRoute allowedRoles={['faculty']} />}>
-          <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
-          <Route path="/faculty/categories" element={<FacultyCategoriesPage />} />
-          <Route path="/faculty/search" element={<FacultySearchResultsPage />} />
-          <Route path="/faculty/activity-log" element={<FacultyActivityLogPage />} />
-          <Route path="/faculty/messages" element={<FacultyMessagesPage />} />
-          <Route path="/faculty/profile" element={<FacultyProfilePage />} />
-          <Route path="/faculty/settings" element={<FacultySettingsPage />} />
-          <Route path="/faculty/about" element={<FacultyAboutPage />} />
-          <Route path="/faculty/support" element={<FacultySupportPage />} />
-          <Route path="/faculty/terms" element={<FacultyTermsPage />} />
-          <Route path="/faculty/my-advisees" element={<FacultyAdviseesPage />} />
-          <Route path="/faculty/students" element={<FacultyFileSharingPage />} />
-          <Route path="/faculty/manage-thesis/add" element={<FacultyAddThesisPage />} />
-          <Route path="/faculty/manage-thesis/approved" element={<FacultyApprovedThesesPage />} />
-          <Route path="/faculty/manage-thesis/review" element={<FacultyReviewSubmissionsPage />} />
-          <Route path="/faculty/manage-thesis/review/:id" element={<FacultySubmissionDetailsPage />} />
-          <Route path="/faculty/*" element={<Navigate to="/faculty/dashboard" replace />} />
+        <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']} />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<FacultyDashboard />} />
+          <Route path="categories" element={<FacultyCategoriesPage />} />
+          <Route path="search" element={<FacultySearchResultsPage />} />
+          <Route path="activity-log" element={<FacultyActivityLogPage />} />
+          <Route path="messages" element={<FacultyMessagesPage />} />
+          <Route path="profile" element={<FacultyProfilePage />} />
+          <Route path="settings" element={<FacultySettingsPage />} />
+          <Route path="about" element={<FacultyAboutPage />} />
+          <Route path="support" element={<FacultySupportPage />} />
+          <Route path="terms" element={<FacultyTermsPage />} />
+          <Route path="my-advisees" element={<FacultyAdviseesPage />} />
+          <Route path="students" element={<FacultyFileSharingPage />} />
+          <Route path="manage-thesis/add" element={<FacultyAddThesisPage />} />
+          <Route path="manage-thesis/approved" element={<FacultyApprovedThesesPage />} />
+          <Route path="manage-thesis/review" element={<FacultyReviewSubmissionsPage />} />
+          <Route path="manage-thesis/review/:id" element={<FacultySubmissionDetailsPage />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 
         {/* Protected Routes - Student */}
-        <Route element={<ProtectedRoute allowedRoles={['student']} />}>
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/student/categories" element={<StudentCategoriesPage />} />
-          <Route path="/student/search" element={<StudentSearchResultsPage />} />
-          <Route path="/student/my-submissions" element={<StudentMySubmissionsPage />} />
-          <Route path="/student/recently-viewed" element={<StudentRecentlyViewedPage />} />
-          <Route path="/student/upload-thesis" element={<StudentUploadThesisPage />} />
-          <Route path="/student/messages" element={<StudentMessagesPage />} />
-          <Route path="/student/profile" element={<StudentProfilePage />} />
-          <Route path="/student/settings" element={<StudentSettingsPage />} />
-          <Route path="/student/about" element={<StudentAboutPage />} />
-          <Route path="/student/support" element={<StudentSupportPage />} />
-          <Route path="/student/terms" element={<StudentTermsPage />} />
-          <Route path="/student/*" element={<Navigate to="/student/dashboard" replace />} />
+        <Route path="/student" element={<ProtectedRoute allowedRoles={['student']} />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="categories" element={<StudentCategoriesPage />} />
+          <Route path="search" element={<StudentSearchResultsPage />} />
+          <Route path="my-submissions" element={<StudentMySubmissionsPage />} />
+          <Route path="my-submissions/:id" element={<StudentSubmissionDetailsPage />} />
+          <Route path="recently-viewed" element={<StudentRecentlyViewedPage />} />
+          <Route path="upload-thesis" element={<StudentUploadThesisPage />} />
+          <Route path="messages" element={<StudentMessagesPage />} />
+          <Route path="profile" element={<StudentProfilePage />} />
+          <Route path="settings" element={<StudentSettingsPage />} />
+          <Route path="about" element={<StudentAboutPage />} />
+          <Route path="support" element={<StudentSupportPage />} />
+          <Route path="terms" element={<StudentTermsPage />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

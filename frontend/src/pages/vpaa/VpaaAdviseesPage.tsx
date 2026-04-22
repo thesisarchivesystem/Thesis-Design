@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, ChevronDown, Clock3, List, Plus, Upload, Users2 } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Clock3, List, Upload, Users2 } from 'lucide-react';
 import VpaaLayout from '../../components/vpaa/VpaaLayout';
 import { facultyManagementService, type FacultyAccountPayload } from '../../services/facultyManagementService';
 import type { FacultyProfile } from '../../types/user.types';
@@ -247,24 +247,23 @@ export default function VpaaAdviseesPage() {
   };
 
   const stats = [
-    { label: 'Total Faculty', value: faculty.length, icon: <Users2 size={20} />, tone: 'si-sky' },
-    { label: 'Department Chairs', value: chairs.length, icon: <Clock3 size={20} />, tone: 'si-gold' },
-    { label: 'Role Changes', value: 0, icon: <CheckCircle2 size={20} />, tone: 'si-sage' },
-    { label: 'New Accounts', value: faculty.filter((member) => new Date(member.user.created_at).getTime() >= Date.now() - (1000 * 60 * 60 * 24 * 30)).length, icon: <Upload size={20} />, tone: 'si-terracotta' },
-    { label: 'On Leave', value: faculty.filter((member) => member.status === 'on_leave').length, icon: <Plus size={20} />, tone: 'si-maroon' },
+    { label: 'Total Faculty', value: faculty.length, icon: <Users2 size={18} />, tone: 'phi-blue' },
+    { label: 'Department Chairs', value: chairs.length, icon: <Clock3 size={18} />, tone: 'phi-gold' },
+    { label: 'Role Changes', value: 0, icon: <CheckCircle2 size={18} />, tone: 'phi-green' },
+    { label: 'New Accounts', value: faculty.filter((member) => new Date(member.user.created_at).getTime() >= Date.now() - (1000 * 60 * 60 * 24 * 30)).length, icon: <Upload size={18} />, tone: 'phi-terracotta' },
   ];
 
   return (
     <VpaaLayout title="Faculty Oversight" description="Create faculty accounts, assign roles by department, and manage faculty access.">
-      <div className="vpaa-grid-5" style={{ marginBottom: 24 }}>
+      <div className="vpaa-grid-4 student-submissions-stats vpaa-activity-summary-grid" style={{ marginBottom: 24 }}>
         {stats.map((card) => (
-          <div className="vpaa-card vpaa-stat-card" key={card.label}>
+          <article className="student-submissions-stat-card vpaa-card vpaa-activity-summary-card" key={card.label}>
             <div>
-              <div className="vpaa-stat-label">{card.label}</div>
-              <div className="vpaa-stat-value">{card.value}</div>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
             </div>
-            <div className={`vpaa-stat-icon ${card.tone}`}>{card.icon}</div>
-          </div>
+            <span className={`student-submissions-stat-icon ${card.tone}`}>{card.icon}</span>
+          </article>
         ))}
       </div>
 
@@ -276,7 +275,6 @@ export default function VpaaAdviseesPage() {
               <span className="panel-title">Create Faculty Account</span>
             </span>
             <span className="vpaa-panel-toggle-actions">
-              <span className="recent-see-all">Bulk Import ?</span>
               <ChevronDown size={18} className={`vpaa-panel-chevron${createOpen ? ' open' : ''}`} />
             </span>
           </button>
@@ -369,7 +367,6 @@ export default function VpaaAdviseesPage() {
               <span className="panel-title">Faculty Directory</span>
             </span>
             <span className="vpaa-panel-toggle-actions">
-              <span className="recent-see-all">Export List ?</span>
               <ChevronDown size={18} className={`vpaa-panel-chevron${directoryOpen ? ' open' : ''}`} />
             </span>
           </button>

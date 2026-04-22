@@ -7,6 +7,7 @@ export interface Message {
   receiver_id: string;
   body: string;
   attachment_url?: string;
+  attachment_access_url?: string | null;
   is_read: boolean;
   created_at: string;
   sender?: User;

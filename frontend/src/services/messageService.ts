@@ -27,7 +27,11 @@ export const messageService = {
     const formData = new FormData();
     formData.append('conversation_id', conversationId);
     formData.append('receiver_id', receiverId);
-    formData.append('body', body);
+
+    const trimmedBody = body.trim();
+    if (trimmedBody) {
+      formData.append('body', trimmedBody);
+    }
 
     if (attachment) {
       formData.append('attachment', attachment);
@@ -38,9 +42,6 @@ export const messageService = {
     }
 
     const { data } = await api.post('/messages', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
       transformRequest: [(requestData) => requestData],
     });
 
