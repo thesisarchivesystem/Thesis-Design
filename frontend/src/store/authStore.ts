@@ -9,6 +9,7 @@ type StoredAuthState = {
 
 interface AuthState extends StoredAuthState {
   setAuth: (user: User, token: string, rememberMe?: boolean) => void;
+  updateUser: (updates: Partial<User>) => void;
   logout: () => void;
 }
 
@@ -84,6 +85,18 @@ export const useAuthStore = create<AuthState>()((set) => ({
   setAuth: (user, token, rememberMe = false) => {
     persistAuth(user, token, rememberMe);
     set({ user, token, rememberMe });
+  },
+  updateUser: (updates) => {
+    set((state) => {
+      if (!state.user || !state.token) {
+        return state;
+      }
+
+      const nextUser = { ...state.user, ...updates };
+      persistAuth(nextUser, state.token, state.rememberMe);
+
+      return { user: nextUser };
+    });
   },
   logout: () => {
     clearStoredAuth();

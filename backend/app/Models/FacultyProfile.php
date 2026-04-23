@@ -15,6 +15,7 @@ class FacultyProfile extends Model
         'user_id',
         'faculty_id',
         'department',
+        'college',
         'rank',
         'faculty_role',
         'assigned_chair_id',

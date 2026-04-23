@@ -74,7 +74,7 @@ class StudentController extends Controller
 
         $latestSubmission = Thesis::query()
             ->where('submitted_by', $user->id)
-            ->with('faculty:id,name,email')
+            ->with('adviser:id,name,email')
             ->orderByDesc('updated_at')
             ->orderByDesc('created_at')
             ->first();
@@ -90,8 +90,8 @@ class StudentController extends Controller
                 'department' => $profile->department,
                 'year_level' => $profile->year_level,
                 'thesis_title' => $latestSubmission?->title,
-                'adviser_name' => $latestSubmission?->faculty?->name ?? $profile->adviser?->name,
-                'adviser_email' => $latestSubmission?->faculty?->email ?? $profile->adviser?->email,
+                'adviser_name' => $latestSubmission?->adviser?->name ?? $profile->adviser?->name,
+                'adviser_email' => $latestSubmission?->adviser?->email ?? $profile->adviser?->email,
                 'defense_schedule' => $this->formatLongDate($latestSubmission?->approved_at ?? $latestSubmission?->updated_at),
                 'status' => $this->formatStudentStatus($latestSubmission?->status),
                 'editable_by' => 'Faculty',

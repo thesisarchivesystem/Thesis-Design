@@ -6,36 +6,32 @@ import { vpaaProfileService } from '../../services/vpaaProfileService';
 type ProfileForm = {
   employeeId: string;
   email: string;
-  mobile: string;
   office: string;
+  areaOfOversight: string;
   firstName: string;
   lastName: string;
   fullName: string;
   role: string;
-  supervisedUnits: string;
   officeHours: string;
-  signatureTitle: string;
 };
 
 const emptyProfile: ProfileForm = {
   employeeId: '',
   email: '',
-  mobile: '',
   office: '',
+  areaOfOversight: '',
   firstName: '',
   lastName: '',
   fullName: '',
   role: '',
-  supervisedUnits: '',
   officeHours: '',
-  signatureTitle: '',
 };
 
 const formatUpdatedLabel = (date: Date) =>
   `Last updated: ${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
 
 export default function VpaaProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [form, setForm] = useState<ProfileForm>(emptyProfile);
   const [loadedProfile, setLoadedProfile] = useState<ProfileForm>(emptyProfile);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,15 +63,13 @@ export default function VpaaProfilePage() {
         const nextProfile = {
           employeeId: profile.employee_id,
           email: profile.email || '',
-          mobile: profile.mobile || '',
           office: profile.office || '',
+          areaOfOversight: profile.area_of_oversight || '',
           firstName: profile.first_name || '',
           lastName: profile.last_name || '',
           fullName: profile.full_name || '',
           role: profile.role_title || '',
-          supervisedUnits: profile.supervised_units || '',
           officeHours: profile.office_hours || '',
-          signatureTitle: profile.signature_title || '',
         };
         setForm(nextProfile);
         setLoadedProfile(nextProfile);
@@ -102,21 +96,28 @@ export default function VpaaProfilePage() {
     try {
       const profile = await vpaaProfileService.updateProfile({
         email: form.email,
-        mobile: form.mobile,
         office: form.office,
+        area_of_oversight: form.areaOfOversight,
         first_name: form.firstName,
         last_name: form.lastName,
         role_title: form.role,
-        supervised_units: form.supervisedUnits,
         office_hours: form.officeHours,
-        signature_title: form.signatureTitle,
       });
 
-      setForm((current) => ({
-        ...current,
-        fullName: `${current.firstName} ${current.lastName}`.trim(),
-      }));
-      setLoadedProfile(form);
+      const nextFullName = `${form.firstName} ${form.lastName}`.trim();
+      const nextProfile = {
+        ...form,
+        fullName: nextFullName,
+      };
+
+      setForm(nextProfile);
+      setLoadedProfile(nextProfile);
+      updateUser({
+        first_name: form.firstName,
+        last_name: form.lastName,
+        name: nextFullName || user?.name || 'VPAA User',
+        email: form.email,
+      });
       setLastUpdated(profile.updated_at ? formatUpdatedLabel(new Date(profile.updated_at)) : formatUpdatedLabel(new Date()));
       setSavedMessage('Profile changes were saved!.');
     } catch (err) {
@@ -138,7 +139,7 @@ export default function VpaaProfilePage() {
         {error ? <div className="vpaa-banner-error">{error}</div> : null}
         {savedMessage ? <div className="vpaa-banner-success">{savedMessage}</div> : null}
 
-        {isLoading ? <div className="vpaa-card">Loading VPAA profile...</div> : null}
+        {isLoading ? <div className="vpaa-card vpaa-profile-loading">Loading VPAA profile...</div> : null}
 
         {!isLoading ? (
         <div className="vpaa-profile-page-grid">
@@ -167,12 +168,12 @@ export default function VpaaProfilePage() {
                   <input type="email" value={form.email} onChange={(event) => handleChange('email', event.target.value)} />
                 </label>
                 <label className="vpaa-profile-form-field">
-                  <span>Mobile</span>
-                  <input value={form.mobile} onChange={(event) => handleChange('mobile', event.target.value)} />
-                </label>
-                <label className="vpaa-profile-form-field">
                   <span>Office</span>
                   <input value={form.office} onChange={(event) => handleChange('office', event.target.value)} />
+                </label>
+                <label className="vpaa-profile-form-field">
+                  <span>Area of Oversight</span>
+                  <input value={form.areaOfOversight} onChange={(event) => handleChange('areaOfOversight', event.target.value)} />
                 </label>
               </div>
             </div>
@@ -213,16 +214,8 @@ export default function VpaaProfilePage() {
                   <input value={form.role} onChange={(event) => handleChange('role', event.target.value)} />
                 </label>
                 <label className="vpaa-profile-form-field">
-                  <span>Supervised Units</span>
-                  <input value={form.supervisedUnits} onChange={(event) => handleChange('supervisedUnits', event.target.value)} />
-                </label>
-                <label className="vpaa-profile-form-field">
                   <span>Office Hours</span>
                   <input value={form.officeHours} onChange={(event) => handleChange('officeHours', event.target.value)} />
-                </label>
-                <label className="vpaa-profile-form-field">
-                  <span>Signature Title</span>
-                  <input value={form.signatureTitle} onChange={(event) => handleChange('signatureTitle', event.target.value)} />
                 </label>
               </div>
             </div>

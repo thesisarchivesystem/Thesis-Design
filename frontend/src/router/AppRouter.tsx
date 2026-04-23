@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import type { UserRole } from '../types/user.types';
+import { authService } from '../services/authService';
 
 // Pages
 import Homepage from '../pages/public/Homepage';
@@ -58,9 +60,37 @@ const ProtectedRoute = ({ allowedRoles }: { allowedRoles: UserRole[] }) => {
   return <Outlet />;
 };
 
+function AuthSync() {
+  const token = useAuthStore((state) => state.token);
+  const rememberMe = useAuthStore((state) => state.rememberMe);
+  const setAuth = useAuthStore((state) => state.setAuth);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let active = true;
+
+    void authService.getCurrentUser()
+      .then((response) => {
+        if (!active || !response?.user) return;
+        setAuth(response.user, token, rememberMe);
+      })
+      .catch(() => {
+        // Let the API interceptor/logout flow handle invalid sessions.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [rememberMe, setAuth, token]);
+
+  return null;
+}
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
+      <AuthSync />
       <Routes>
         {/* Public */}
         <Route path="/" element={<Homepage />} />

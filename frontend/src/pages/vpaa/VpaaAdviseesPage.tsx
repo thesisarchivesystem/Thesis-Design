@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, ChevronDown, Clock3, List, Upload, Users2 } from 'lucide-react';
+import { ChevronDown, List, UserCheck, UserRoundCog, UserRoundCheck, Users2 } from 'lucide-react';
 import VpaaLayout from '../../components/vpaa/VpaaLayout';
 import { facultyManagementService, type FacultyAccountPayload } from '../../services/facultyManagementService';
 import type { FacultyProfile } from '../../types/user.types';
@@ -8,6 +8,15 @@ const generateTemporaryPassword = () => {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
   return Array.from({ length: 10 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 };
+
+const collegeOptions = [
+  'COLLEGE OF INDUSTRIAL TECHNOLOGY',
+  'COLLEGE OF INDUSTRIAL EDUCATION',
+  'COLLEGE OF ENGINEERING',
+  'COLLEGE OF MANAGEMENT AND MULTIDISCIPLINARY STUDIES',
+  'COLLEGE OF SCIENCE',
+  'COLLEGE OF ARCHITECTURE AND FINE ARTS',
+];
 
 const EDIT_PANEL_CLOSE_DELAY = 280;
 const EDIT_PANEL_SHELL_CLOSE_DELAY = 180;
@@ -32,6 +41,7 @@ const initialForm: FacultyAccountPayload = {
   temporary_password: generateTemporaryPassword(),
   faculty_id: '',
   department: '',
+  college: '',
   rank: '',
   faculty_role: 'Adviser',
   assigned_chair_id: '',
@@ -42,6 +52,13 @@ const roleTagClass = (role: string) => {
   if (role.includes('Co')) return 'tag-is';
   return 'tag-it';
 };
+
+const displayRoleLabel = (role: string) => {
+  if (role === 'Department Chair') return 'Dean';
+  return role;
+};
+
+const needsAssignedDean = (role: string) => role !== 'Department Chair';
 
 const statusBadgeClass = (status: FacultyProfile['status']) => {
   if (status === 'active') return 'status-approved';
@@ -56,7 +73,7 @@ const statusLabel = (status: FacultyProfile['status']) => {
 };
 
 const roleShortLabel = (role: string) => {
-  if (role === 'Department Chair') return 'CHAIR';
+  if (role === 'Department Chair') return 'DEAN';
   if (role === 'Co-Adviser') return 'CO-ADV';
   return 'ADV';
 };
@@ -111,6 +128,8 @@ export default function VpaaAdviseesPage() {
   }, [editingId, editOpen]);
 
   const chairs = useMemo(() => faculty.filter((member) => member.faculty_role === 'Department Chair'), [faculty]);
+  const advisers = useMemo(() => faculty.filter((member) => member.faculty_role === 'Adviser'), [faculty]);
+  const coAdvisers = useMemo(() => faculty.filter((member) => member.faculty_role === 'Co-Adviser'), [faculty]);
   const nextFacultyId = useMemo(() => generateNextFacultyId(faculty), [faculty]);
 
   const resetCreateForm = () => {
@@ -161,6 +180,7 @@ export default function VpaaAdviseesPage() {
       temporary_password: '',
       faculty_id: member.faculty_id,
       department: member.department,
+      college: member.college || '',
       rank: member.rank || '',
       faculty_role: member.faculty_role || 'Adviser',
       assigned_chair_id: member.assigned_chair_id || '',
@@ -206,6 +226,7 @@ export default function VpaaAdviseesPage() {
         faculty_id: nextFacultyId,
         rank: form.rank || undefined,
         department: form.department.trim(),
+        college: form.college?.trim() || undefined,
         assigned_chair_id: form.assigned_chair_id || undefined,
         temporary_password: form.temporary_password,
       });
@@ -233,6 +254,7 @@ export default function VpaaAdviseesPage() {
         faculty_id: (editForm.faculty_id ?? '').trim(),
         rank: editForm.rank || undefined,
         department: editForm.department.trim(),
+        college: editForm.college?.trim() || undefined,
         assigned_chair_id: editForm.assigned_chair_id || undefined,
         temporary_password: editForm.temporary_password.trim() || undefined,
       });
@@ -248,9 +270,9 @@ export default function VpaaAdviseesPage() {
 
   const stats = [
     { label: 'Total Faculty', value: faculty.length, icon: <Users2 size={18} />, tone: 'phi-blue' },
-    { label: 'Department Chairs', value: chairs.length, icon: <Clock3 size={18} />, tone: 'phi-gold' },
-    { label: 'Role Changes', value: 0, icon: <CheckCircle2 size={18} />, tone: 'phi-green' },
-    { label: 'New Accounts', value: faculty.filter((member) => new Date(member.user.created_at).getTime() >= Date.now() - (1000 * 60 * 60 * 24 * 30)).length, icon: <Upload size={18} />, tone: 'phi-terracotta' },
+    { label: 'Deans', value: chairs.length, icon: <UserRoundCog size={18} />, tone: 'phi-green' },
+    { label: 'Adviser', value: advisers.length, icon: <UserCheck size={18} />, tone: 'phi-red' },
+    { label: 'Co-Adviser', value: coAdvisers.length, icon: <UserRoundCheck size={18} />, tone: 'phi-orange' },
   ];
 
   return (
@@ -297,8 +319,15 @@ export default function VpaaAdviseesPage() {
                 </label>
                 <label className="form-field">
                   Role
-                  <select value={form.faculty_role} onChange={(event) => setForm({ ...form, faculty_role: event.target.value })}>
-                    <option value="Department Chair">Department Chair</option>
+                  <select
+                    value={form.faculty_role}
+                    onChange={(event) => setForm({
+                      ...form,
+                      faculty_role: event.target.value,
+                      assigned_chair_id: event.target.value === 'Department Chair' ? '' : form.assigned_chair_id,
+                    })}
+                  >
+                    <option value="Department Chair">Dean</option>
                     <option value="Adviser">Adviser</option>
                     <option value="Co-Adviser">Co-Adviser</option>
                   </select>
@@ -335,18 +364,29 @@ export default function VpaaAdviseesPage() {
                   <input value={form.rank} onChange={(event) => setForm({ ...form, rank: event.target.value })} placeholder="Instructor I" />
                 </label>
                 <label className="form-field">
-                  Department
-                  <input value={form.department} onChange={(event) => setForm({ ...form, department: event.target.value })} placeholder="Computer Studies Department" required />
-                </label>
-                <label className="form-field">
-                  Assigned Chair
-                  <select value={form.assigned_chair_id} onChange={(event) => setForm({ ...form, assigned_chair_id: event.target.value })}>
-                    <option value="">Select assigned chair</option>
-                    {chairs.map((member) => (
-                      <option key={member.id} value={member.user_id}>{member.user.name}</option>
+                  College
+                  <select value={form.college || ''} onChange={(event) => setForm({ ...form, college: event.target.value })}>
+                    <option value="">Select college</option>
+                    {collegeOptions.map((college) => (
+                      <option key={college} value={college}>{college}</option>
                     ))}
                   </select>
                 </label>
+                <label className="form-field">
+                  Department
+                  <input value={form.department} onChange={(event) => setForm({ ...form, department: event.target.value })} placeholder="Computer Studies Department" required />
+                </label>
+                {needsAssignedDean(form.faculty_role) ? (
+                  <label className="form-field">
+                    Assigned Dean
+                    <select value={form.assigned_chair_id} onChange={(event) => setForm({ ...form, assigned_chair_id: event.target.value })}>
+                      <option value="">Select assigned dean</option>
+                      {chairs.map((member) => (
+                        <option key={member.id} value={member.user_id}>{member.user.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
               </div>
 
               <div className="form-actions">
@@ -379,7 +419,7 @@ export default function VpaaAdviseesPage() {
                 <input className="filter-input" type="text" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search faculty, ID, or role..." />
                 <select className="filter-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
                   <option value="all">All Roles</option>
-                  <option value="Department Chair">Department Chair</option>
+                  <option value="Department Chair">Dean</option>
                   <option value="Adviser">Adviser</option>
                   <option value="Co-Adviser">Co-Adviser</option>
                 </select>
@@ -392,7 +432,7 @@ export default function VpaaAdviseesPage() {
               </div>
               <div className="filter-chips">
                 <button type="button" className={`chip${quickFilter === 'all' ? ' active' : ''}`} onClick={() => setQuickFilter('all')}>All</button>
-                <button type="button" className={`chip${quickFilter === 'chairs' ? ' active' : ''}`} onClick={() => setQuickFilter('chairs')}>Department Chairs</button>
+                <button type="button" className={`chip${quickFilter === 'chairs' ? ' active' : ''}`} onClick={() => setQuickFilter('chairs')}>Deans</button>
                 <button type="button" className={`chip${quickFilter === 'changes' ? ' active' : ''}`} onClick={() => setQuickFilter('changes')}>Role Changes</button>
                 <button type="button" className={`chip${quickFilter === 'new' ? ' active' : ''}`} onClick={() => setQuickFilter('new')}>New Accounts</button>
               </div>
@@ -415,7 +455,7 @@ export default function VpaaAdviseesPage() {
                   {filteredFaculty.length ? filteredFaculty.map((member) => (
                     <tr key={member.id}>
                       <td className="rt-title">{member.user.name}</td>
-                      <td><span className={`role-tag ${roleTagClass(member.faculty_role)}`}>{roleShortLabel(member.faculty_role)}</span></td>
+                      <td><span className={`role-tag ${roleTagClass(member.faculty_role)}`} title={displayRoleLabel(member.faculty_role)}>{roleShortLabel(member.faculty_role)}</span></td>
                       <td>{member.department}</td>
                       <td>{member.faculty_role === 'Department Chair' ? 'Admin' : member.status === 'inactive' ? 'Access Review' : 'Standard'}</td>
                       <td>{new Date(member.user.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</td>
@@ -469,8 +509,15 @@ export default function VpaaAdviseesPage() {
                     </label>
                     <label className="form-field">
                       Role
-                      <select value={editForm.faculty_role} onChange={(event) => setEditForm({ ...editForm, faculty_role: event.target.value })}>
-                        <option value="Department Chair">Department Chair</option>
+                      <select
+                        value={editForm.faculty_role}
+                        onChange={(event) => setEditForm({
+                          ...editForm,
+                          faculty_role: event.target.value,
+                          assigned_chair_id: event.target.value === 'Department Chair' ? '' : editForm.assigned_chair_id,
+                        })}
+                      >
+                        <option value="Department Chair">Dean</option>
                         <option value="Adviser">Adviser</option>
                         <option value="Co-Adviser">Co-Adviser</option>
                       </select>
@@ -506,18 +553,29 @@ export default function VpaaAdviseesPage() {
                       <input value={editForm.rank} onChange={(event) => setEditForm({ ...editForm, rank: event.target.value })} placeholder="Instructor I" />
                     </label>
                     <label className="form-field">
-                      Department
-                      <input value={editForm.department} onChange={(event) => setEditForm({ ...editForm, department: event.target.value })} placeholder="Computer Studies Department" required />
-                    </label>
-                    <label className="form-field">
-                      Assigned Chair
-                      <select value={editForm.assigned_chair_id} onChange={(event) => setEditForm({ ...editForm, assigned_chair_id: event.target.value })}>
-                        <option value="">Select assigned chair</option>
-                        {chairs.map((member) => (
-                          <option key={member.id} value={member.user_id}>{member.user.name}</option>
+                      College
+                      <select value={editForm.college || ''} onChange={(event) => setEditForm({ ...editForm, college: event.target.value })}>
+                        <option value="">Select college</option>
+                        {collegeOptions.map((college) => (
+                          <option key={college} value={college}>{college}</option>
                         ))}
                       </select>
                     </label>
+                    <label className="form-field">
+                      Department
+                      <input value={editForm.department} onChange={(event) => setEditForm({ ...editForm, department: event.target.value })} placeholder="Computer Studies Department" required />
+                    </label>
+                    {needsAssignedDean(editForm.faculty_role) ? (
+                      <label className="form-field">
+                        Assigned Dean
+                        <select value={editForm.assigned_chair_id} onChange={(event) => setEditForm({ ...editForm, assigned_chair_id: event.target.value })}>
+                          <option value="">Select assigned dean</option>
+                          {chairs.map((member) => (
+                            <option key={member.id} value={member.user_id}>{member.user.name}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : null}
                   </div>
 
                   <div className="form-actions">

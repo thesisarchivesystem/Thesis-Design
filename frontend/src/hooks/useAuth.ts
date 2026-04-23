@@ -9,6 +9,7 @@ export function useAuth() {
     isAuthenticated: !!auth.token,
     rememberMe: auth.rememberMe,
     setAuth: auth.setAuth,
+    updateUser: auth.updateUser,
     logout: auth.logout,
   };
 }
