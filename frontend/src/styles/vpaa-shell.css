@@ -459,7 +459,7 @@
 .vpaa-dropdown-panel {
   position: absolute;
   top: 54px;
-  right: 0;
+  right: 8px;
   width: 290px;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -530,7 +530,7 @@
 }
 
 .vpaa-profile-panel {
-  width: 240px;
+  width: 180px;
   padding: 10px;
 }
 
@@ -548,7 +548,7 @@
 .vpaa-profile-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .vpaa-profile-action {
@@ -556,7 +556,7 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 10px;
   border-radius: 10px;
   font-size: 12px;
   color: var(--text-secondary);
@@ -1620,6 +1620,16 @@
 .phi-green {
   background: rgba(61, 139, 74, 0.12);
   color: var(--sage);
+}
+
+.phi-red {
+  background: rgba(139, 35, 50, 0.12);
+  color: var(--maroon);
+}
+
+.phi-orange {
+  background: rgba(108, 99, 255, 0.14);
+  color: #5d54cc;
 }
 
 .phi-terracotta {
@@ -5358,14 +5368,14 @@
 .vpaa-profile-page-shell,
 .vpaa-settings-page-shell {
   display: grid;
-  gap: 24px;
+  gap: 16px;
 }
 
 .vpaa-profile-page-grid,
 .vpaa-settings-page-grid {
   display: grid;
   grid-template-columns: 1.05fr 1.95fr;
-  gap: 24px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -5376,22 +5386,27 @@
   box-shadow: var(--shadow-md);
 }
 
+.vpaa-profile-loading {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .vpaa-profile-summary-card,
 .vpaa-settings-summary-card {
-  padding: 28px;
+  padding: 18px;
   display: grid;
-  gap: 20px;
+  gap: 12px;
 }
 
 .vpaa-profile-hero-avatar,
 .vpaa-settings-hero-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 28px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   display: grid;
   place-items: center;
   color: white;
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -5418,15 +5433,16 @@
 
 .vpaa-profile-display-name,
 .vpaa-settings-display-name {
-  font-size: 28px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .vpaa-profile-display-role,
 .vpaa-settings-display-role {
-  margin-top: 6px;
-  font-size: 15px;
+  margin-top: 2px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
@@ -5435,9 +5451,9 @@
   width: fit-content;
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -5455,29 +5471,30 @@
 
 .vpaa-profile-display-notice,
 .vpaa-settings-display-notice {
-  padding: 16px 18px;
-  border-radius: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
   border: 1px dashed rgba(139, 35, 50, 0.24);
   background: rgba(139, 35, 50, 0.05);
   color: var(--maroon);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.45;
 }
 
 .vpaa-profile-details-card,
 .vpaa-settings-details-card {
-  padding: 26px 28px;
+  padding: 18px 20px;
   display: grid;
-  gap: 22px;
+  gap: 14px;
 }
 
 .vpaa-profile-section-block {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .vpaa-profile-section-heading {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -5488,14 +5505,14 @@
 .vpaa-settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 12px;
 }
 
 .vpaa-profile-form-field span,
 .vpaa-settings-field label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 13px;
+  margin-bottom: 5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-tertiary);
 }
@@ -5503,13 +5520,14 @@
 .vpaa-profile-form-field input,
 .vpaa-settings-select {
   width: 100%;
-  height: 52px;
+  height: 40px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--bg-card-alt);
   color: var(--text-primary);
   font: inherit;
-  padding: 0 16px;
+  font-size: 13px;
+  padding: 0 12px;
 }
 
 .vpaa-profile-form-field input:focus,
@@ -5534,33 +5552,34 @@
 .vpaa-profile-meta-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .vpaa-profile-meta-row span {
   display: inline-flex;
   align-items: center;
-  padding: 9px 14px;
+  padding: 7px 10px;
   border-radius: 999px;
   background: var(--bg-card-alt);
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .vpaa-profile-form-actions,
 .vpaa-settings-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .vpaa-profile-page-btn {
   border: 0;
-  border-radius: 16px;
-  padding: 14px 22px;
+  border-radius: 12px;
+  padding: 10px 16px;
   font: inherit;
   font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
 }
 
@@ -5580,19 +5599,19 @@
 }
 
 .vpaa-settings-inline {
-  min-height: 52px;
+  min-height: 40px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--bg-card-alt);
-  padding: 0 14px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
 .vpaa-settings-inline span {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-primary);
 }
 

@@ -338,10 +338,6 @@ export default function VpaaLayout({ title, description, children, hidePageIntro
                 <span className="vpaa-user-info"><strong className="vpaa-user-name">{user?.name || 'VPAA User'}</strong><span className="vpaa-user-role">VPAA</span></span>
               </button>
               <div className={`vpaa-dropdown-panel vpaa-profile-panel ${profileOpen ? 'open' : ''}`}>
-                <div className="vpaa-profile-card">
-                  <span className="vpaa-user-avatar avatar-tone-vpaa small">{initials}</span>
-                  <div className="vpaa-user-info"><strong className="vpaa-user-name">{user?.name || 'VPAA User'}</strong><span className="vpaa-user-role">VPAA</span></div>
-                </div>
                 <div className="vpaa-profile-actions">
                   <Link className="vpaa-profile-action" to="/vpaa/profile"><User size={16} /><span>Profile</span></Link>
                   <Link className="vpaa-profile-action" to="/vpaa/settings"><Settings size={16} /><span>Settings</span></Link>

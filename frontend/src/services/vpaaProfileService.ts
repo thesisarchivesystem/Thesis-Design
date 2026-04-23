@@ -3,14 +3,12 @@ import type { VpaaProfile } from '../types/user.types';
 
 export type UpdateVpaaProfilePayload = {
   email: string;
-  mobile: string;
   office: string;
+  area_of_oversight: string;
   first_name: string;
   last_name: string;
   role_title: string;
-  supervised_units: string;
   office_hours: string;
-  signature_title: string;
 };
 
 export const vpaaProfileService = {

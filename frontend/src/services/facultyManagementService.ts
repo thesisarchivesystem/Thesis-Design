@@ -8,6 +8,7 @@ export interface FacultyAccountPayload {
   temporary_password: string;
   faculty_id?: string;
   department: string;
+  college?: string;
   rank?: string;
   faculty_role: string;
   assigned_chair_id?: string;
@@ -20,6 +21,7 @@ export interface FacultyUpdatePayload {
   temporary_password?: string;
   faculty_id: string;
   department: string;
+  college?: string;
   rank?: string;
   faculty_role: string;
   assigned_chair_id?: string;

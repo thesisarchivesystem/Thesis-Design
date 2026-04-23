@@ -385,14 +385,6 @@ export default function FacultyLayout({ title, description, children, hidePageIn
               </button>
 
               <div className={`vpaa-dropdown-panel vpaa-profile-panel ${profileOpen ? 'open' : ''}`}>
-                <div className="vpaa-profile-card">
-                  <span className="vpaa-user-avatar avatar-tone-faculty small">{initials}</span>
-                  <div className="vpaa-user-info">
-                    <strong className="vpaa-user-name">{user?.name || 'Faculty User'}</strong>
-                    <span className="vpaa-user-role">Faculty</span>
-                  </div>
-                </div>
-
                 <div className="vpaa-profile-actions">
                   <Link className="vpaa-profile-action" to="/faculty/profile"><User size={16} /><span>Profile</span></Link>
                   <Link className="vpaa-profile-action" to="/faculty/settings"><Settings size={16} /><span>Settings</span></Link>

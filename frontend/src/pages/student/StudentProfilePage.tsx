@@ -75,7 +75,7 @@ export default function StudentProfilePage() {
     >
       <div className="vpaa-profile-page-shell">
         {error ? <div className="vpaa-banner-error">{error}</div> : null}
-        {isLoading ? <div className="vpaa-card">Loading student profile...</div> : null}
+        {isLoading ? <div className="vpaa-card vpaa-profile-loading">Loading student profile...</div> : null}
 
         {!isLoading ? (
           <div className="vpaa-profile-page-grid">

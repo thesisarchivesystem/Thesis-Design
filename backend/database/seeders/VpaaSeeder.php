@@ -32,13 +32,11 @@ class VpaaSeeder extends Seeder
         VpaaProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'employee_id' => 'TUPM-VPAA-2009-01',
-                'mobile' => '+63 918 552 1101',
-                'office' => 'VPAA Office, Admin Building',
+                'employee_id' => 'VPAA-' . now()->format('y') . '-0001',
+                'office' => 'Office of the VPAA',
+                'area_of_oversight' => 'Academic Affairs',
                 'role_title' => 'Vice President for Academic Affairs',
-                'supervised_units' => 'College of Engineering, CS Dept',
                 'office_hours' => 'Mon to Fri 8:00 AM - 5:00 PM',
-                'signature_title' => 'VPAA - TUP Manila',
             ]
         );
 

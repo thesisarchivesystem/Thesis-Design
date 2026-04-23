@@ -19,13 +19,11 @@ export interface VpaaProfile {
   email: string;
   first_name?: string | null;
   last_name?: string | null;
-  mobile?: string | null;
   office?: string | null;
+  area_of_oversight?: string | null;
   full_name: string;
   role_title?: string | null;
-  supervised_units?: string | null;
   office_hours?: string | null;
-  signature_title?: string | null;
   updated_at?: string | null;
 }
 
@@ -34,6 +32,7 @@ export interface FacultyProfile {
   user_id: string;
   faculty_id: string;
   department: string;
+  college?: string | null;
   rank: string;
   faculty_role: 'Department Chair' | 'Adviser' | 'Co-Adviser';
   assigned_chair_id?: string;

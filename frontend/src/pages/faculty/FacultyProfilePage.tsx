@@ -7,13 +7,15 @@ const emptyProfile: FacultyProfileView = {
   id: '',
   faculty_id: '',
   full_name: '',
+  first_name: '',
+  last_name: '',
   email: '',
   department: '',
+  college: null,
   faculty_role: '',
   role_title: '',
   rank: '',
   mobile: null,
-  office: null,
   advisee_count: 0,
   committee_role: '',
   consultation_hours: null,
@@ -83,7 +85,7 @@ export default function FacultyProfilePage() {
     >
       <div className="vpaa-profile-page-shell">
         {error ? <div className="vpaa-banner-error">{error}</div> : null}
-        {isLoading ? <div className="vpaa-card">Loading faculty profile...</div> : null}
+        {isLoading ? <div className="vpaa-card vpaa-profile-loading">Loading faculty profile...</div> : null}
 
         {!isLoading ? (
           <div className="vpaa-profile-page-grid">
@@ -101,7 +103,7 @@ export default function FacultyProfilePage() {
 
             <section className="vpaa-profile-page-panel vpaa-profile-details-card">
               <div className="vpaa-profile-section-block">
-                <div className="vpaa-profile-section-heading">Professional Information</div>
+                <div className="vpaa-profile-section-heading">Account Information</div>
                 <div className="vpaa-profile-form-grid">
                   <label className="vpaa-profile-form-field">
                     <span>Faculty ID</span>
@@ -112,34 +114,34 @@ export default function FacultyProfilePage() {
                     <input value={profile.email} readOnly />
                   </label>
                   <label className="vpaa-profile-form-field">
-                    <span>Mobile</span>
-                    <input value={withFallback(profile.mobile)} readOnly />
+                    <span>Department</span>
+                    <input value={withFallback(profile.department)} readOnly />
                   </label>
                   <label className="vpaa-profile-form-field">
-                    <span>Office</span>
-                    <input value={withFallback(profile.office)} readOnly />
+                    <span>College</span>
+                    <input value={withFallback(profile.college)} readOnly />
                   </label>
                 </div>
               </div>
 
               <div className="vpaa-profile-section-block">
-                <div className="vpaa-profile-section-heading">Academic Load</div>
+                <div className="vpaa-profile-section-heading">Faculty Details</div>
                 <div className="vpaa-profile-form-grid">
                   <label className="vpaa-profile-form-field">
-                    <span>Advisees</span>
-                    <input value={`${profile.advisee_count} Thesis Advisees`} readOnly />
+                    <span>First Name</span>
+                    <input value={withFallback(profile.first_name)} readOnly />
                   </label>
                   <label className="vpaa-profile-form-field">
-                    <span>Committee Role</span>
-                    <input value={withFallback(profile.committee_role)} readOnly />
+                    <span>Last Name</span>
+                    <input value={withFallback(profile.last_name)} readOnly />
                   </label>
                   <label className="vpaa-profile-form-field">
-                    <span>Consultation Hours</span>
-                    <input value={withFallback(profile.consultation_hours)} readOnly />
+                    <span>Role</span>
+                    <input value={withFallback(profile.role_title)} readOnly />
                   </label>
                   <label className="vpaa-profile-form-field">
-                    <span>Specialization</span>
-                    <input value={withFallback(profile.specialization || profile.rank)} readOnly />
+                    <span>Office Hours</span>
+                    <input value={withFallback(profile.consultation_hours || profile.specialization)} readOnly />
                   </label>
                 </div>
               </div>

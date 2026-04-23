@@ -12,13 +12,11 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('user_id')->unique();
             $table->string('employee_id')->unique();
-            $table->string('mobile')->nullable();
-            $table->string('office')->nullable();
+            $table->string('department')->nullable();
+            $table->string('college')->nullable();
             $table->string('role_title')->nullable();
             $table->date('term_start')->nullable();
-            $table->string('supervised_units')->nullable();
             $table->string('office_hours')->nullable();
-            $table->string('signature_title')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
