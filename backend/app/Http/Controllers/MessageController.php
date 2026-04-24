@@ -281,7 +281,7 @@ class MessageController extends Controller
     {
         $query = User::query()
             ->where('id', '!=', $user->id)
-            ->where('is_active', true);
+            ->whereRaw('is_active = true');
 
         return match ($user->role) {
             'student' => $query->where('role', 'faculty')->orderBy('name'),
