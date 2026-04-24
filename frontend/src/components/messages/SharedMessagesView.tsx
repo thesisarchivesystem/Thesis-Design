@@ -201,13 +201,20 @@ export default function SharedMessagesView() {
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [startingConversationId, setStartingConversationId] = useState<string | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [syncingMessages, setSyncingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAttachment, setSelectedAttachment] = useState<File | null>(null);
+  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
   const optimisticMessageIdRef = useRef(0);
   const typingTimeoutRef = useRef<number | null>(null);
+  const activeConversationIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversationId;
+  }, [activeConversationId]);
 
   const upsertConversation = (conversation: Conversation, unreadCount?: number) => {
     setConversations((current) => {
@@ -253,9 +260,13 @@ export default function SharedMessagesView() {
       const nextConversations = (conversationResponse.data ?? []) as Conversation[];
 
       setConversations(nextConversations);
-      setActiveConversationId((current) => current && nextConversations.some((item) => item.id === current)
-        ? current
-        : null);
+      setActiveConversationId((current) => {
+        if (current && nextConversations.some((item) => item.id === current)) {
+          return current;
+        }
+
+        return nextConversations[0]?.id ?? null;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load conversations.');
       setConversations([]);
@@ -263,8 +274,14 @@ export default function SharedMessagesView() {
     }
   };
 
-  const loadMessages = async (conversationId: string) => {
-    setLoadingMessages(true);
+  const loadMessages = async (conversationId: string, options?: { background?: boolean }) => {
+    const isBackgroundRefresh = options?.background === true;
+
+    if (isBackgroundRefresh) {
+      setSyncingMessages(true);
+    } else {
+      setLoadingMessages(true);
+    }
 
     try {
       const response = await messageService.getMessages(conversationId);
@@ -276,9 +293,15 @@ export default function SharedMessagesView() {
       )));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load messages.');
-      setMessages([]);
+      if (!isBackgroundRefresh) {
+        setMessages([]);
+      }
     } finally {
-      setLoadingMessages(false);
+      if (isBackgroundRefresh) {
+        setSyncingMessages(false);
+      } else {
+        setLoadingMessages(false);
+      }
     }
   };
 
@@ -354,6 +377,7 @@ export default function SharedMessagesView() {
   const activeHeaderEmail = activeConversationView?.contact?.email || activeRecipient?.email || 'Choose a user to start chatting';
   const activeHeaderInitials = getInitials(activeConversationView?.contact?.name || activeRecipient?.name);
   const activeHeaderRole = activeConversationView?.contact?.role || activeRecipient?.role;
+  const activeRecipientIsOnline = Boolean(activeRecipient?.id && onlineUserIds.includes(activeRecipient.id));
   const { typingUserId, publishTyping } = useTypingIndicator(activeConversationId, user?.id || '');
   const isOtherUserTyping = Boolean(typingUserId && typingUserId !== user?.id);
 
@@ -387,9 +411,15 @@ export default function SharedMessagesView() {
 
   useEffect(() => {
     if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+      const frameId = window.requestAnimationFrame(() => {
+        if (chatBodyRef.current) {
+          chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+        }
+      });
+
+      return () => window.cancelAnimationFrame(frameId);
     }
-  }, [isOtherUserTyping, messageGroups, loadingMessages]);
+  }, [isOtherUserTyping, syncingMessages, messageGroups, loadingMessages]);
 
   useEffect(() => () => {
     if (typingTimeoutRef.current) {
@@ -410,8 +440,8 @@ export default function SharedMessagesView() {
         void loadContacts();
         void loadConversations();
 
-        if (activeConversationId) {
-          void loadMessages(activeConversationId);
+        if (activeConversationIdRef.current) {
+          void loadMessages(activeConversationIdRef.current, { background: true });
         }
       };
 
@@ -422,22 +452,84 @@ export default function SharedMessagesView() {
     return () => {
       channelCleanup?.();
     };
-  }, [user?.id, activeConversationId]);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let isMounted = true;
+    let cleanup: (() => void) | undefined;
+
+    void (async () => {
+      const client = await getAblyClient();
+      const channel = client.channels.get('private:presence.messaging');
+      const presence = (channel as unknown as {
+        presence: {
+          enterClient: (clientId: string, data?: unknown) => Promise<void>;
+          leaveClient: (clientId: string) => Promise<void>;
+          get: () => Promise<Array<{ clientId: string }>>;
+          subscribe: (action: 'enter' | 'leave' | 'update', listener: () => void) => void;
+          unsubscribe: (action: 'enter' | 'leave' | 'update', listener: () => void) => void;
+        };
+      }).presence;
+
+      const refreshMembers = async () => {
+        try {
+          const members = await presence.get();
+          if (!isMounted) return;
+          setOnlineUserIds(Array.from(new Set(members.map((member) => member.clientId))));
+        } catch {
+          if (!isMounted) return;
+          setOnlineUserIds([]);
+        }
+      };
+
+      const handlePresenceChange = () => {
+        void refreshMembers();
+      };
+
+      await presence.enterClient(user.id, { role: user.role });
+      await refreshMembers();
+
+      presence.subscribe('enter', handlePresenceChange);
+      presence.subscribe('leave', handlePresenceChange);
+      presence.subscribe('update', handlePresenceChange);
+
+      cleanup = () => {
+        presence.unsubscribe('enter', handlePresenceChange);
+        presence.unsubscribe('leave', handlePresenceChange);
+        presence.unsubscribe('update', handlePresenceChange);
+        void presence.leaveClient(user.id);
+      };
+    })();
+
+    return () => {
+      isMounted = false;
+      cleanup?.();
+    };
+  }, [user?.id, user?.role]);
 
   useChatChannel(activeConversationId, (incomingMessage) => {
-    setMessages((current) => current.some((item) => item.id === incomingMessage.id) ? current : [...current, incomingMessage]);
+    if (incomingMessage.conversation_id === activeConversationIdRef.current) {
+      setMessages((current) => current.some((item) => item.id === incomingMessage.id) ? current : [...current, incomingMessage]);
+    }
 
     const knownConversation = conversations.find((conversation) => conversation.id === incomingMessage.conversation_id);
     if (knownConversation) {
+      const isIncomingForCurrentUser = incomingMessage.receiver_id === user?.id;
+      const isActiveConversation = incomingMessage.conversation_id === activeConversationIdRef.current;
+
       upsertConversation({
         ...knownConversation,
         last_message_at: incomingMessage.created_at,
         last_message: incomingMessage,
-      }, incomingMessage.receiver_id === user?.id ? 0 : knownConversation.unread_count ?? 0);
+      }, isIncomingForCurrentUser
+        ? (isActiveConversation ? 0 : (knownConversation.unread_count ?? 0) + 1)
+        : 0);
       return;
     }
 
-    void loadConversations();
+      void loadConversations();
   });
 
   const handleOpenContact = async (contact: MessageContact) => {
@@ -571,8 +663,6 @@ export default function SharedMessagesView() {
           </div>
 
           <div className="vpaa-contacts-list vpaa-contacts-list-users">
-            {loadingContacts ? <div className="vpaa-messages-empty">Loading users...</div> : null}
-
             {!loadingContacts && !filteredContacts.length ? (
               <div className="vpaa-messages-empty">No users matched your search.</div>
             ) : null}
@@ -580,6 +670,7 @@ export default function SharedMessagesView() {
             {filteredContacts.map((contact) => {
               const isActive = contact.conversation_id === activeConversationId;
               const isStarting = startingConversationId === contact.id;
+              const isOnline = onlineUserIds.includes(contact.id);
 
               return (
                 <button
@@ -594,7 +685,7 @@ export default function SharedMessagesView() {
                   <div className="vpaa-contact-main">
                     <div className="vpaa-contact-name-row">
                       <div className="vpaa-contact-name">{contact.name}</div>
-                      <span className="vpaa-contact-status-dot" />
+                      {isOnline ? <span className="vpaa-contact-status-dot" /> : null}
                     </div>
                     <div className="vpaa-contact-preview">{contact.email}</div>
                   </div>
@@ -616,7 +707,7 @@ export default function SharedMessagesView() {
               <div>
                 <div className="vpaa-chat-name-row">
                   <div className="vpaa-chat-name">{activeHeaderName}</div>
-                  {activeConversationView || activeContact ? <span className="vpaa-online-dot" /> : null}
+                  {activeRecipientIsOnline ? <span className="vpaa-online-dot" /> : null}
                 </div>
                 <div className="vpaa-chat-subtitle">{activeHeaderEmail}</div>
               </div>
@@ -677,6 +768,16 @@ export default function SharedMessagesView() {
                       );
                     })}
                     {isOtherUserTyping ? (
+                      <div className="vpaa-bubble-row">
+                        <div className={`vpaa-bubble-avatar avatar-tone-${getAvatarToneClass(activeHeaderRole)}`}>{activeHeaderInitials}</div>
+                        <div className="vpaa-bubble vpaa-typing-bubble" aria-live="polite">
+                          <span className="vpaa-typing-dot" />
+                          <span className="vpaa-typing-dot" />
+                          <span className="vpaa-typing-dot" />
+                        </div>
+                      </div>
+                    ) : null}
+                    {syncingMessages && activeConversationId ? (
                       <div className="vpaa-bubble-row">
                         <div className={`vpaa-bubble-avatar avatar-tone-${getAvatarToneClass(activeHeaderRole)}`}>{activeHeaderInitials}</div>
                         <div className="vpaa-bubble vpaa-typing-bubble" aria-live="polite">

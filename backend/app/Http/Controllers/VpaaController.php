@@ -32,14 +32,12 @@ class VpaaController extends Controller
     {
         $validated = $request->validate([
             'email' => 'required|email|max:255|unique:users,email,' . $request->user()->id,
-            'mobile' => 'nullable|string|max:255',
             'office' => 'nullable|string|max:255',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'role_title' => 'required|string|max:255',
-            'supervised_units' => 'nullable|string|max:255',
+            'area_of_oversight' => 'nullable|string|max:255',
             'office_hours' => 'nullable|string|max:255',
-            'signature_title' => 'nullable|string|max:255',
         ]);
 
         $user = $request->user();
@@ -52,12 +50,10 @@ class VpaaController extends Controller
         ]);
 
         $profile->update([
-            'mobile' => $validated['mobile'] ?? null,
             'office' => $validated['office'] ?? null,
             'role_title' => $validated['role_title'],
-            'supervised_units' => $validated['supervised_units'] ?? null,
+            'area_of_oversight' => $validated['area_of_oversight'] ?? null,
             'office_hours' => $validated['office_hours'] ?? null,
-            'signature_title' => $validated['signature_title'] ?? null,
         ]);
 
         $profile->refresh()->load('user');
@@ -167,15 +163,13 @@ class VpaaController extends Controller
             'id' => $profile->id,
             'employee_id' => $profile->employee_id,
             'email' => $profile->user?->email,
-            'mobile' => $profile->mobile,
             'office' => $profile->office,
             'first_name' => $profile->user?->first_name,
             'last_name' => $profile->user?->last_name,
             'full_name' => $profile->user?->name,
             'role_title' => $profile->role_title,
-            'supervised_units' => $profile->supervised_units,
+            'area_of_oversight' => $profile->area_of_oversight,
             'office_hours' => $profile->office_hours,
-            'signature_title' => $profile->signature_title,
             'updated_at' => optional($profile->updated_at)?->toISOString(),
         ];
     }

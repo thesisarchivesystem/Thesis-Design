@@ -20,10 +20,12 @@ class AblyTokenController extends Controller
             'private:notifications.' . $user->id => ['subscribe'],
             // Any conversation they are a participant in
             'private:conversation.*'              => ['subscribe'],
+            // Shared presence channel for the messaging module
+            'private:presence.messaging'          => ['subscribe', 'publish', 'presence'],
         ];
 
         // Faculty and students can also publish typing events
-        if (in_array($user->role, ['faculty', 'student'])) {
+        if (in_array($user->role, ['faculty', 'student', 'vpaa'], true)) {
             $capabilities['private:conversation.*'][] = 'publish';
             $capabilities['private:conversation.*'][] = 'presence';
         }
