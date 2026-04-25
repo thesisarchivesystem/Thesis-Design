@@ -42,6 +42,57 @@ class AuthController extends Controller
         ]);
     }
 
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $identifier = trim((string) ($request->input('identifier') ?? $request->input('email') ?? ''));
+        $role = (string) $request->input('role', '');
+
+        $newPassword = (string) (
+            $request->input('new_password')
+            ?? $request->input('newPassword')
+            ?? $request->input('password')
+            ?? ''
+        );
+
+        $confirmation = (string) (
+            $request->input('password_confirmation')
+            ?? $request->input('confirm_password')
+            ?? ''
+        );
+
+        if ($identifier === '' || $newPassword === '') {
+            return response()->json(['message' => 'Identifier and new password are required.'], 422);
+        }
+
+        if ($confirmation !== '' && $newPassword !== $confirmation) {
+            return response()->json(['message' => 'Password confirmation does not match.'], 422);
+        }
+
+        if (strlen($newPassword) < 8) {
+            return response()->json(['message' => 'Password must be at least 8 characters.'], 422);
+        }
+
+        $user = $this->resolveUserFromIdentifier($identifier);
+
+        if (!$user || ($role !== '' && $user->role !== $role)) {
+            return response()->json(['message' => 'If the account exists, password has been updated.']);
+        }
+
+        $user->password = Hash::make($newPassword);
+        $user->save();
+
+        $user->tokens()->delete();
+
+        $this->logger->log($user, 'auth.password_reset', 'user', $user->id, [
+            'identifier' => $identifier,
+            'role' => $role,
+            'ip_address' => $request->ip(),
+            'user_agent' => (string) $request->userAgent(),
+        ]);
+
+        return response()->json(['message' => 'Password updated successfully.']);
+    }
+
     public function login(Request $request): JsonResponse
     {
         $request->validate([
