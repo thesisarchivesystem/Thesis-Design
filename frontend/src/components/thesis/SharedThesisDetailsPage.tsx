@@ -98,7 +98,6 @@ export default function SharedThesisDetailsPage({
     return thesis.authors?.filter(Boolean).join(', ') || thesis.submitter?.name || 'Unknown author';
   }, [thesis]);
 
-  const keywords = thesis?.keywords?.filter(Boolean) ?? [];
   const metadata = [
     thesis?.department,
     thesis?.program,
@@ -157,15 +156,6 @@ export default function SharedThesisDetailsPage({
               <div className="student-submission-summary">
                 <strong>Authors</strong>
                 <p>{authorLabel}</p>
-              </div>
-
-              <div className="student-submission-summary">
-                <strong>Keywords</strong>
-                <div className="faculty-submission-keywords">
-                  {keywords.length ? keywords.map((keyword) => (
-                    <span key={keyword}>{keyword}</span>
-                  )) : <span>No keywords provided</span>}
-                </div>
               </div>
             </section>
 

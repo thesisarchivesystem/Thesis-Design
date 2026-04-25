@@ -14,6 +14,8 @@ export interface FacultyActivityRow {
   tone: 'maroon' | 'sky' | 'sage' | 'terracotta' | 'gold';
   request_record: string;
   account: string;
+  role: string;
+  college: string;
   department: string;
   time: string;
   timestamp: string;
@@ -26,8 +28,10 @@ export interface FacultyActivityLogResponse {
 }
 
 export const facultyActivityService = {
-  async getActivityLog(): Promise<FacultyActivityLogResponse> {
-    const response = await api.get('/faculty/activity-log');
+  async getActivityLog(q?: string): Promise<FacultyActivityLogResponse> {
+    const response = await api.get('/faculty/activity-log', {
+      params: q?.trim() ? { q: q.trim() } : undefined,
+    });
     return response.data.data ?? response.data;
   },
 };

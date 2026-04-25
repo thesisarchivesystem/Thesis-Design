@@ -29,6 +29,7 @@ class Thesis extends Model
         'cover_file_name',
         'supplementary_files',
         'status',
+        'is_archived',
         'submitted_by',
         'adviser_id',
         'rejection_reason',
@@ -38,6 +39,7 @@ class Thesis extends Model
         'submitted_at',
         'reviewed_at',
         'approved_at',
+        'archived_at',
     ];
 
     protected $casts = [
@@ -45,9 +47,11 @@ class Thesis extends Model
         'authors' => 'array',
         'category_ids' => 'array',
         'supplementary_files' => 'array',
+        'is_archived' => 'boolean',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'approved_at' => 'datetime',
+        'archived_at' => 'datetime',
         'revision_due_at' => 'date',
     ];
 

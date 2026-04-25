@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Clock3, Search, SquareSplitVertical, Users2 } from 'lucide-react';
+import { CheckCircle2, Clock3, RefreshCcw, Search, SquareSplitVertical, Users2 } from 'lucide-react';
 import FacultyLayout from '../../components/faculty/FacultyLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { facultyActivityService, type FacultyActivityLogResponse, type FacultyActivityRow } from '../../services/facultyActivityService';
@@ -50,12 +50,38 @@ export default function FacultyActivityLogPage() {
   const [quickFilter, setQuickFilter] = useState<'all' | 'today' | 'week' | 'mine'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+
+  const loadActivityLog = (silent = false, query = search) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    setError('');
+
+    return facultyActivityService.getActivityLog(query)
+      .then((response) => {
+        setActivityData(response);
+      })
+      .catch(() => {
+        setError('Unable to load activity log right now.');
+      })
+      .finally(() => {
+        if (silent) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
+        }
+      });
+  };
 
   useEffect(() => {
     let isMounted = true;
 
-    void facultyActivityService.getActivityLog()
+    void facultyActivityService.getActivityLog(search)
       .then((response) => {
         if (!isMounted) return;
         setActivityData(response);
@@ -71,7 +97,7 @@ export default function FacultyActivityLogPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [search]);
 
   const activityOptions = useMemo(
     () => ['all', ...new Set((activityData?.logs ?? []).map((item) => item.badge))],
@@ -88,7 +114,7 @@ export default function FacultyActivityLogPage() {
 
     return logs.filter((item) => {
       const normalizedSearch = search.trim().toLowerCase();
-      const matchesSearch = !normalizedSearch || [item.badge, item.request_record, item.account, item.department]
+      const matchesSearch = !normalizedSearch || [item.badge, item.request_record, item.account, item.role, item.college, item.department]
         .join(' ')
         .toLowerCase()
         .includes(normalizedSearch);
@@ -154,16 +180,25 @@ export default function FacultyActivityLogPage() {
           ))}
         </div>
 
-        <div className="review-panel">
-          <div className="ra-header">
-            <div className="ra-header-left">
+        <div className="review-panel faculty-activity-log-panel">
+          <div className="ra-header faculty-activity-log-header">
+            <div className="ra-header-left faculty-activity-log-header-left">
               <span className="panel-header-icon phi-maroon"><SquareSplitVertical size={17} /></span>
               <h3 className="panel-title">Recent Activity</h3>
             </div>
+            <button
+              type="button"
+              className="faculty-activity-log-refresh"
+              onClick={() => void loadActivityLog(true, search)}
+              disabled={refreshing}
+            >
+              <RefreshCcw size={16} className={refreshing ? 'faculty-activity-log-refresh-icon spinning' : 'faculty-activity-log-refresh-icon'} />
+              <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
           </div>
 
-          <div className="filter-row">
-            <div className="filter-group">
+          <div className="filter-row faculty-activity-log-filters">
+            <div className="filter-group faculty-activity-log-filter-group">
               <label className="vpaa-activity-search">
                 <Search size={16} />
                 <input
@@ -171,7 +206,7 @@ export default function FacultyActivityLogPage() {
                   type="text"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search by action, thesis, or faculty..."
+                  placeholder="Search by action, account, or department..."
                 />
               </label>
 
@@ -188,7 +223,7 @@ export default function FacultyActivityLogPage() {
               </select>
             </div>
 
-            <div className="filter-chips">
+            <div className="filter-chips faculty-activity-log-chips">
               {[
                 ['all', 'All'],
                 ['today', 'Today'],
@@ -207,35 +242,37 @@ export default function FacultyActivityLogPage() {
             </div>
           </div>
 
-          <div className="review-table-wrap">
-            <table className="review-table">
+          <div className="review-table-wrap faculty-activity-log-table-wrap">
+            <table className="review-table faculty-activity-log-table">
               <thead>
                 <tr>
                   <th>Activity</th>
-                  <th>Thesis / File</th>
-                  <th>Faculty</th>
+                  <th>Request / Record</th>
+                  <th>Account</th>
+                  <th>Role</th>
+                  <th>College</th>
                   <th>Department</th>
                   <th>Time</th>
-                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="vpaa-activity-empty">Loading activity log...</td>
+                    <td colSpan={7} className="vpaa-activity-empty">Loading activity log...</td>
                   </tr>
                 ) : paginatedLogs.length ? paginatedLogs.map((entry) => (
                   <tr key={entry.id}>
                     <td><span className={`status-badge ${toneClassMap[entry.tone]}`}>{entry.badge}</span></td>
                     <td className="rt-title">{entry.request_record}</td>
                     <td>{entry.account}</td>
+                    <td>{entry.role}</td>
+                    <td>{entry.college}</td>
                     <td>{entry.department}</td>
                     <td>{formatRelativeTime(entry.timestamp)}</td>
-                    <td className="table-actions"><button type="button" className="btn-review">{entry.action}</button></td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={6} className="vpaa-activity-empty">No activity matched the current filters.</td>
+                    <td colSpan={7} className="vpaa-activity-empty">No activity matched the current filters.</td>
                   </tr>
                 )}
               </tbody>
