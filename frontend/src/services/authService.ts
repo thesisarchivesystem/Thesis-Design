@@ -6,13 +6,8 @@ export const authService = {
     return data;
   },
 
-  async forgotPassword(email: string) {
-    const { data } = await api.post('/auth/forgot-password', { email });
-    return data;
-  },
-
-  async resetPassword(payload: { token: string; email: string; password: string; password_confirmation: string }) {
-    const { data } = await api.post('/auth/reset-password', payload);
+  async forgotPassword(identifier: string, role: 'student' | 'faculty' | 'vpaa') {
+    const { data } = await api.post('/auth/forgot-password', { identifier, role });
     return data;
   },
 
