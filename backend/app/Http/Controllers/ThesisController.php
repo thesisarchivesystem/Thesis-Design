@@ -219,6 +219,7 @@ class ThesisController extends Controller
             'approved_at' => null,
             'rejection_reason' => null,
             'adviser_remarks' => null,
+            'revision_due_at' => null,
         ]);
 
         $this->logger->log($request->user(), 'thesis.submitted', 'thesis', $thesis->id);
@@ -298,6 +299,7 @@ class ThesisController extends Controller
             'status'           => 'required|in:approved,rejected',
             'adviser_remarks'  => 'nullable|string|max:2000',
             'rejection_reason' => 'required_if:status,rejected|nullable|string|max:2000',
+            'revision_due_at'  => 'required_if:status,rejected|nullable|date|after:today',
         ]);
 
         $thesis = Thesis::findOrFail($id);
@@ -306,6 +308,7 @@ class ThesisController extends Controller
             'status'           => $request->status,
             'adviser_remarks'  => $request->adviser_remarks,
             'rejection_reason' => $request->rejection_reason,
+            'revision_due_at'  => $request->status === 'rejected' ? $request->input('revision_due_at') : null,
             'reviewed_at'      => now(),
             'approved_at'      => $request->status === 'approved' ? now() : null,
         ]);

@@ -21,6 +21,7 @@ export interface Thesis {
   adviser_id?: string;
   rejection_reason?: string;
   adviser_remarks?: string;
+  revision_due_at?: string;
   view_count: number;
   submitted_at?: string;
   reviewed_at?: string;

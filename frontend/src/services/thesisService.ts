@@ -111,11 +111,12 @@ export const thesisService = {
     return data;
   },
 
-  async review(id: string, status: 'approved' | 'rejected', remarks: string, reason?: string) {
+  async review(id: string, status: 'approved' | 'rejected', remarks: string, reason?: string, revisionDueAt?: string) {
     const { data } = await api.patch(`/faculty/thesis/${id}/review`, {
       status,
       adviser_remarks: remarks,
       rejection_reason: reason,
+      revision_due_at: revisionDueAt,
     });
     return data;
   },

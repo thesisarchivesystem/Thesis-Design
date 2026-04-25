@@ -1329,7 +1329,7 @@
   grid-column: 1 / -1;
 }
 
-.student-upload-field span {
+.student-upload-field > span {
   font-size: 12px;
   font-weight: 700;
   display: inline-flex;
@@ -1382,6 +1382,21 @@
 .student-upload-searchbox {
   display: grid;
   gap: 10px;
+}
+
+.student-upload-searchbox.selected input {
+  border-color: rgba(139, 35, 50, 0.3);
+  background:
+    linear-gradient(180deg, rgba(139, 35, 50, 0.08), rgba(139, 35, 50, 0.04)),
+    var(--bg-card);
+  box-shadow:
+    0 0 0 3px rgba(139, 35, 50, 0.08),
+    0 12px 24px rgba(139, 35, 50, 0.08);
+  color: var(--maroon);
+}
+
+.student-upload-searchbox.selected input::placeholder {
+  color: rgba(139, 35, 50, 0.52);
 }
 
 .student-upload-search-results {
@@ -1481,6 +1496,7 @@
   color: var(--text-primary);
   font-size: 13px;
   line-height: 1.5;
+  font-weight: 400;
 }
 
 .student-upload-multi-dropdown-meta {
@@ -1520,12 +1536,16 @@
   background: rgba(139, 35, 50, 0.04);
   color: var(--text-primary);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition:
     background-color 180ms ease,
     border-color 180ms ease,
     transform 180ms ease;
+}
+
+.student-upload-option-chip span {
+  font-weight: 400;
 }
 
 .student-upload-option-chip input {
@@ -1539,6 +1559,10 @@
   border-color: rgba(139, 35, 50, 0.28);
   background: rgba(139, 35, 50, 0.1);
   color: var(--maroon);
+}
+
+.student-upload-option-chip.active span {
+  font-weight: 400;
 }
 
 .student-upload-option-chip:hover {
@@ -1781,7 +1805,7 @@
 }
 
 .student-upload-section-copy h2 svg,
-.student-upload-field span svg {
+.student-upload-field > span svg {
   color: var(--maroon);
   flex: 0 0 auto;
 }

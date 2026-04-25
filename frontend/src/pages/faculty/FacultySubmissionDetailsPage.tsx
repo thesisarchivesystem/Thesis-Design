@@ -47,6 +47,7 @@ export default function FacultySubmissionDetailsPage() {
   const [success, setSuccess] = useState('');
   const [openingManuscript, setOpeningManuscript] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
+  const [revisionDueAt, setRevisionDueAt] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export default function FacultySubmissionDetailsPage() {
         const data = response?.data ?? response;
         setSubmission(data ?? null);
         setReviewComment(data?.adviser_remarks ?? data?.rejection_reason ?? '');
+        setRevisionDueAt(data?.revision_due_at ?? '');
       })
       .catch((err) => {
         setSubmission(null);
@@ -83,6 +85,7 @@ export default function FacultySubmissionDetailsPage() {
   useEffect(() => {
     if (!locationState?.submission) return;
     setReviewComment(locationState.submission.adviser_remarks ?? locationState.submission.rejection_reason ?? '');
+    setRevisionDueAt(locationState.submission.revision_due_at ?? '');
   }, [locationState]);
 
   const authorLabel = useMemo(() => {
@@ -141,6 +144,12 @@ export default function FacultySubmissionDetailsPage() {
       return;
     }
 
+    if (status === 'rejected' && !revisionDueAt) {
+      setError('Please set a revision due date before marking this submission for revision.');
+      setSuccess('');
+      return;
+    }
+
     setIsSubmittingReview(true);
     setError('');
     setSuccess('');
@@ -151,12 +160,14 @@ export default function FacultySubmissionDetailsPage() {
         status,
         trimmedComment,
         status === 'rejected' ? trimmedComment : undefined,
+        status === 'rejected' ? revisionDueAt : undefined,
       );
 
       const refreshed = await thesisService.get(submission.id);
       const updatedSubmission = refreshed?.data ?? refreshed;
       setSubmission(updatedSubmission ?? null);
       setReviewComment(updatedSubmission?.adviser_remarks ?? updatedSubmission?.rejection_reason ?? trimmedComment);
+      setRevisionDueAt(updatedSubmission?.revision_due_at ?? '');
       setSuccess(status === 'approved' ? 'Submission approved successfully.' : 'Submission marked for revision successfully.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to submit the review right now.');
@@ -287,6 +298,14 @@ export default function FacultySubmissionDetailsPage() {
                     placeholder="Add faculty comments, revision notes, or approval remarks here..."
                     rows={5}
                   />
+                  <label className="student-upload-field">
+                    <span><CalendarDays size={14} /> Revision Due Date</span>
+                    <input
+                      type="date"
+                      value={revisionDueAt}
+                      onChange={(event) => setRevisionDueAt(event.target.value)}
+                    />
+                  </label>
                   <div className="faculty-submission-review-actions">
                     <button
                       type="button"
