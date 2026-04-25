@@ -18,6 +18,19 @@ const formatSubmissionDate = (value?: string) => {
   });
 };
 
+const formatDueDate = (value?: string) => {
+  if (!value) return 'No due date set';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'No due date set';
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 const getStatusLabel = (status: ThesisStatus) => {
   if (status === 'approved') return 'Archived';
   if (status === 'rejected') return 'Revisions Needed';
@@ -353,6 +366,9 @@ export default function StudentMySubmissionsPage() {
                           {item.status === 'draft' ? 'Draft saved' : 'Submitted'} {formatSubmissionDate(item.submitted_at || item.created_at)}
                           {item.submitter?.name ? ` by ${item.submitter.name}` : ''}
                         </p>
+                        {item.status === 'rejected' ? (
+                          <p>Revision Due {formatDueDate(item.revision_due_at)}</p>
+                        ) : null}
                       </div>
                       <span className={getStatusBadgeClass(item.status)}>{getStatusLabel(item.status)}</span>
                     </div>

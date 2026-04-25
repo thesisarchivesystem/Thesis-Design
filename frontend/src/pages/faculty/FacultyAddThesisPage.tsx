@@ -418,16 +418,6 @@ export default function FacultyAddThesisPage() {
             <label className={`student-upload-field full${fieldErrors.authors ? ' has-error' : ''}`}>
               <span><UserRound size={14} /> Authors</span>
               <div className="student-upload-author-box">
-                <div className="student-upload-author-tags">
-                  {form.authors.map((author) => (
-                    <span className="student-upload-author-chip" key={author}>
-                      {author}
-                      <button type="button" onClick={() => removeAuthor(author)} aria-label={`Remove ${author}`}>
-                        x
-                      </button>
-                    </span>
-                  ))}
-                </div>
                 <input
                   value={authorInput}
                   onChange={(event) => setAuthorInput(event.target.value)}
@@ -440,6 +430,16 @@ export default function FacultyAddThesisPage() {
                   onBlur={() => addAuthor(authorInput)}
                   placeholder="Type an author name, then press Enter"
                 />
+                <div className="student-upload-author-tags">
+                  {form.authors.map((author) => (
+                    <span className="student-upload-author-chip" key={author}>
+                      {author}
+                      <button type="button" onClick={() => removeAuthor(author)} aria-label={`Remove ${author}`}>
+                        x
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
               {fieldErrors.authors ? <small className="student-upload-field-error">{fieldErrors.authors}</small> : <small>Press Enter after each author name to add another one.</small>}
             </label>
@@ -468,7 +468,7 @@ export default function FacultyAddThesisPage() {
                       className={`student-upload-search-option${form.adviserId === adviser.id ? ' active' : ''}`}
                       onClick={() => {
                         setForm((current) => ({ ...current, adviserId: adviser.id }));
-                        setAdviserSearch(adviser.name);
+                        setAdviserSearch('');
                         setFieldErrors((current) => ({ ...current, adviserId: undefined }));
                       }}
                     >
@@ -478,12 +478,25 @@ export default function FacultyAddThesisPage() {
                   ))}
                   {!filteredAdvisers.length ? <div className="student-upload-search-empty">No adviser found.</div> : null}
                 </div>
+                {selectedAdviser ? (
+                  <div className="student-upload-author-tags">
+                    <span className="student-upload-author-chip">
+                      {selectedAdviser.name} - {selectedAdviser.faculty_role}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((current) => ({ ...current, adviserId: '' }));
+                          setAdviserSearch('');
+                        }}
+                        aria-label={`Remove ${selectedAdviser.name}`}
+                      >
+                        x
+                      </button>
+                    </span>
+                  </div>
+                ) : null}
               </div>
-              {fieldErrors.adviserId ? <small className="student-upload-field-error">{fieldErrors.adviserId}</small> : <small>
-                {selectedAdviser
-                  ? `${selectedAdviser.email} - ${selectedAdviser.faculty_role}`
-                  : 'Choose from active faculty profiles in the database.'}
-              </small>}
+              {fieldErrors.adviserId ? <small className="student-upload-field-error">{fieldErrors.adviserId}</small> : <small>Choose from active faculty profiles in the database.</small>}
             </label>
 
             <label className={`student-upload-field full${fieldErrors.abstract ? ' has-error' : ''}`}>

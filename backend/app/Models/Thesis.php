@@ -33,6 +33,7 @@ class Thesis extends Model
         'adviser_id',
         'rejection_reason',
         'adviser_remarks',
+        'revision_due_at',
         'view_count',
         'submitted_at',
         'reviewed_at',
@@ -47,6 +48,7 @@ class Thesis extends Model
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
         'approved_at' => 'datetime',
+        'revision_due_at' => 'date',
     ];
 
     public function submitter(): BelongsTo

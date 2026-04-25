@@ -138,7 +138,6 @@ export default function StudentUploadThesisPage() {
         setCategories(response);
         setForm((current) => ({
           ...current,
-          category_ids: current.category_ids.length ? current.category_ids : (response[0]?.id ? [response[0].id] : []),
           program: current.program || response[0]?.theses[0]?.program || 'BS Computer Science',
         }));
       })
@@ -295,6 +294,25 @@ export default function StudentUploadThesisPage() {
     return createdId;
   };
 
+  const resetDraftForm = () => {
+    setForm((current) => ({
+      ...initialFormState,
+      program: current.program,
+      department: current.department,
+      school_year: current.school_year,
+      category_ids: [],
+    }));
+    setDraftId(null);
+    setLoadedStatus(null);
+    setExistingManuscriptName('');
+    setConfirmOriginal(false);
+    setAllowReview(false);
+    setManuscriptFile(null);
+    setSupplementaryFiles([]);
+    setAuthorInput('');
+    setAdviserSearch('');
+  };
+
   const handleDraftSave = async () => {
     try {
       setSaving(true);
@@ -310,6 +328,7 @@ export default function StudentUploadThesisPage() {
       }
 
       await persistDraft();
+      resetDraftForm();
       setMessage(isRevisionMode ? 'Revision draft saved successfully.' : 'Draft saved successfully.');
     } catch (err) {
       setError(extractApiErrorMessage(err, isRevisionMode ? 'Unable to save your revision draft.' : 'Unable to save your thesis draft.'));
@@ -360,7 +379,7 @@ export default function StudentUploadThesisPage() {
       setMessage('Thesis submitted successfully.');
       setDraftId(null);
       setExistingManuscriptName('');
-      navigate('/student/my-submissions');
+      setTimeout(() => navigate('/student/my-submissions'), 1200);
     } catch (err) {
       setError(extractApiErrorMessage(err, 'Unable to submit your thesis.'));
     } finally {
@@ -488,16 +507,6 @@ export default function StudentUploadThesisPage() {
             <label className={`student-upload-field full${fieldErrors.authors ? ' has-error' : ''}`}>
               <span><UserRound size={14} /> Authors</span>
               <div className="student-upload-author-box">
-                <div className="student-upload-author-tags">
-                  {form.authors.map((author) => (
-                    <span className="student-upload-author-chip" key={author}>
-                      {author}
-                      <button type="button" onClick={() => removeAuthor(author)} aria-label={`Remove ${author}`}>
-                        x
-                      </button>
-                    </span>
-                  ))}
-                </div>
                 <input
                   value={authorInput}
                   onChange={(event) => setAuthorInput(event.target.value)}
@@ -510,6 +519,16 @@ export default function StudentUploadThesisPage() {
                   onBlur={() => addAuthor(authorInput)}
                   placeholder="Type an author name, then press Enter"
                 />
+                <div className="student-upload-author-tags">
+                  {form.authors.map((author) => (
+                    <span className="student-upload-author-chip" key={author}>
+                      {author}
+                      <button type="button" onClick={() => removeAuthor(author)} aria-label={`Remove ${author}`}>
+                        x
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
               {fieldErrors.authors ? <small className="student-upload-field-error">{fieldErrors.authors}</small> : <small>Press Enter after each author name to add another one.</small>}
             </label>
@@ -549,12 +568,25 @@ export default function StudentUploadThesisPage() {
                     {!filteredAdvisers.length ? <div className="student-upload-search-empty">No adviser found.</div> : null}
                   </div>
                 ) : null}
+                {selectedAdviser ? (
+                  <div className="student-upload-author-tags">
+                    <span className="student-upload-author-chip">
+                      {selectedAdviser.name} - {selectedAdviser.faculty_role}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((current) => ({ ...current, adviser_id: '' }));
+                          setAdviserSearch('');
+                        }}
+                        aria-label={`Remove ${selectedAdviser.name}`}
+                      >
+                        x
+                      </button>
+                    </span>
+                  </div>
+                ) : null}
               </div>
-              {fieldErrors.adviser_id ? <small className="student-upload-field-error">{fieldErrors.adviser_id}</small> : <small>
-                {selectedAdviser
-                  ? `${selectedAdviser.email} - ${selectedAdviser.faculty_role}`
-                  : 'Choose from active faculty profiles in the database.'}
-              </small>}
+              {fieldErrors.adviser_id ? <small className="student-upload-field-error">{fieldErrors.adviser_id}</small> : <small>Choose from active faculty profiles in the database.</small>}
             </label>
 
             <label className={`student-upload-field full${fieldErrors.abstract ? ' has-error' : ''}`}>

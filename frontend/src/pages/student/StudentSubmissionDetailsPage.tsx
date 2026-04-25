@@ -195,6 +195,7 @@ export default function StudentSubmissionDetailsPage() {
                     {submission.program ? <span>{submission.program}</span> : null}
                     <span>{submission.school_year}</span>
                     {submission.category?.name ? <span>{submission.category.name}</span> : null}
+                    {submission.status === 'rejected' && submission.revision_due_at ? <span>Revision Due {formatDate(submission.revision_due_at)}</span> : null}
                     <span>Updated {formatDate(submission.reviewed_at || submission.approved_at || submission.created_at)}</span>
                   </div>
                 </div>
@@ -261,13 +262,19 @@ export default function StudentSubmissionDetailsPage() {
                   <span><UserRound size={13} /> Adviser</span>
                   <strong>{submission.adviser?.name || 'Not assigned yet'}</strong>
                 </div>
-                <div className="student-submission-detail-card">
-                  <span><FolderOpen size={13} /> Category</span>
-                  <strong>{submission.category?.name || 'Not assigned yet'}</strong>
-                </div>
+                {submission.status === 'rejected' ? (
+                  <div className="student-submission-detail-card">
+                    <span><CalendarDays size={13} /> Revision Due Date</span>
+                    <strong>{formatDate(submission.revision_due_at)}</strong>
+                  </div>
+                ) : null}
                 <div className="student-submission-detail-card">
                   <span><GraduationCap size={13} /> Program</span>
                   <strong>{submission.program || 'Not assigned yet'}</strong>
+                </div>
+                <div className="student-submission-detail-card">
+                  <span><FolderOpen size={13} /> Category</span>
+                  <strong>{submission.category?.name || 'Not assigned yet'}</strong>
                 </div>
                 <div className="student-submission-detail-card full">
                   <span><FileText size={13} /> Manuscript</span>
