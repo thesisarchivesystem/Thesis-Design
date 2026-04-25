@@ -6,16 +6,6 @@ export const authService = {
     return data;
   },
 
-  async forgotPassword(email: string) {
-    const { data } = await api.post('/auth/forgot-password', { email });
-    return data;
-  },
-
-  async resetPassword(payload: { token: string; email: string; password: string; password_confirmation: string }) {
-    const { data } = await api.post('/auth/reset-password', payload);
-    return data;
-  },
-
   async logout() {
     return api.post('/auth/logout');
   },
@@ -23,5 +13,12 @@ export const authService = {
   async getCurrentUser() {
     const { data } = await api.get('/auth/me');
     return data;
+  },
+
+  async resetPassword(token: string, password: string) {
+    return api.post('/auth/reset-password', {
+      token,
+      password,
+    });
   },
 };
