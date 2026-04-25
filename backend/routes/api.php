@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 // ── Public ──────────────────────────────────────────────────
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // ── Authenticated ────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
