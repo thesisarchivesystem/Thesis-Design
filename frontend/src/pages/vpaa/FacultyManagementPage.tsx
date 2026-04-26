@@ -197,7 +197,7 @@ export default function FacultyManagementPage() {
             <input
               value={form.faculty_id ?? ''}
               onChange={(e) => setForm({ ...form, faculty_id: e.target.value })}
-              placeholder={editingId ? 'Faculty ID' : `Faculty ID (suggested: ${nextFacultyId})`}
+              placeholder={editingId ? 'Faculty ID' : 'TUPM-00-000'}
               disabled={submitting}
             />
             <select value={form.college || ''} onChange={(e) => setForm({ ...form, college: e.target.value, department: '' })} disabled={submitting}>

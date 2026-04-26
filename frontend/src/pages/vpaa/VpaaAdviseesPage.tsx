@@ -315,7 +315,7 @@ export default function VpaaAdviseesPage() {
                     <input
                       value={form.faculty_id ?? ''}
                       onChange={(event) => setForm({ ...form, faculty_id: event.target.value })}
-                      placeholder={`Suggested: ${nextFacultyId}`}
+                      placeholder="TUPM-00-000"
                     />
                   </label>
                 <label className="form-field">
