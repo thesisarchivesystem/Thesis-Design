@@ -4,9 +4,11 @@ import type { StudentProfile } from '../types/user.types';
 export interface FacultyAdviseeSummary {
   total_advisees: number;
   active_proposals: number;
+  on_track?: number;
   for_defense: number;
   needs_guidance: number;
   new_this_term: number;
+  info_changed?: number;
 }
 
 export interface FacultyAdviseeRecord {
@@ -27,6 +29,7 @@ export interface FacultyAdviseeRecord {
   approved_count: number;
   needs_guidance: boolean;
   is_recent: boolean;
+  info_changed?: boolean;
   adviser_name: string;
 }
 

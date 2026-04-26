@@ -58,8 +58,7 @@ export default function FacultyAdviseesPage() {
   const [editShellOpen, setEditShellOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [programFilter, setProgramFilter] = useState('All Programs');
-  const [statusFilter, setStatusFilter] = useState('All Status');
-  const [quickFilter, setQuickFilter] = useState<'All' | 'Assigned to Me' | 'Needs Guidance' | 'Near Defense'>('All');
+  const [quickFilter, setQuickFilter] = useState<'All' | 'Assigned to Me'>('All');
   const [error, setError] = useState('');
   const [editError, setEditError] = useState('');
   const [success, setSuccess] = useState('');
@@ -129,20 +128,17 @@ export default function FacultyAdviseesPage() {
     ].join(' ').toLowerCase().includes(normalizedSearch);
 
     const matchesProgram = programFilter === 'All Programs' || advisee.program === programFilter;
-    const matchesStatus = statusFilter === 'All Status' || advisee.status === statusFilter;
     const matchesQuick = quickFilter === 'All'
-      || (quickFilter === 'Assigned to Me' && advisee.adviser_name === adviseesData?.adviser_name)
-      || (quickFilter === 'Needs Guidance' && advisee.needs_guidance)
-      || (quickFilter === 'Near Defense' && advisee.approved_count > 0);
+      || (quickFilter === 'Assigned to Me' && advisee.adviser_name === adviseesData?.adviser_name);
 
-    return matchesSearch && matchesProgram && matchesStatus && matchesQuick;
-  }), [advisees, adviseesData?.adviser_name, programFilter, quickFilter, search, statusFilter]);
+    return matchesSearch && matchesProgram && matchesQuick;
+  }), [advisees, adviseesData?.adviser_name, programFilter, quickFilter, search]);
 
   const stats = [
     { label: 'Total Advisees', value: summary?.total_advisees ?? 0, icon: <Users2 size={20} />, tone: 'si-sky' },
     { label: 'Active Proposals', value: summary?.active_proposals ?? 0, icon: <Clock3 size={20} />, tone: 'si-gold' },
-    { label: 'Near Defense', value: summary?.for_defense ?? 0, icon: <CheckCircle2 size={20} />, tone: 'si-sage' },
-    { label: 'New This Term', value: summary?.new_this_term ?? 0, icon: <UserPlus size={20} />, tone: 'si-maroon' },
+    { label: 'On Track', value: summary?.on_track ?? 0, icon: <CheckCircle2 size={20} />, tone: 'si-sage' },
+    { label: 'Account Changed', value: summary?.info_changed ?? 0, icon: <Users2 size={20} />, tone: 'si-maroon' },
   ];
 
   const resetEditForm = () => {
@@ -400,13 +396,10 @@ export default function FacultyAdviseesPage() {
                   <select className="filter-select" value={programFilter} onChange={(event) => setProgramFilter(event.target.value)}>
                     {programOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                   </select>
-                  <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                    {['All Status', 'Active', 'Needs Guidance', 'On Track'].map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
                 </div>
 
                 <div className="filter-chips">
-                  {(['All', 'Assigned to Me', 'Needs Guidance', 'Near Defense'] as const).map((filter) => (
+                  {(['All', 'Assigned to Me'] as const).map((filter) => (
                     <button key={filter} type="button" className={`chip${quickFilter === filter ? ' active' : ''}`} onClick={() => setQuickFilter(filter)}>
                       {filter}
                     </button>

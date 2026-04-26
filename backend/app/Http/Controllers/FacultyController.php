@@ -963,7 +963,7 @@ class FacultyController extends Controller
             ->firstOrFail();
 
         $students = StudentProfile::query()
-            ->with('user:id,name,email,created_at')
+            ->with('user:id,name,email,created_at,updated_at,first_name,last_name')
             ->where('adviser_id', $request->user()->id)
             ->orderByDesc('created_at')
             ->get();
@@ -1020,6 +1020,11 @@ class FacultyController extends Controller
                 'approved_count' => $approvedCount,
                 'needs_guidance' => $status['label'] === 'Needs Guidance',
                 'is_recent' => optional($student->created_at)?->gte(now()->subDays(120)) ?? false,
+                'info_changed' => (
+                    optional($student->updated_at)?->gt($student->created_at) ?? false
+                ) || (
+                    optional($student->user?->updated_at)?->gt($student->user?->created_at) ?? false
+                ),
                 'adviser_name' => $request->user()->name,
             ];
         })->values();
@@ -1032,9 +1037,11 @@ class FacultyController extends Controller
                 'summary' => [
                     'total_advisees' => $advisees->count(),
                     'active_proposals' => $advisees->sum('proposal_count'),
+                    'on_track' => $advisees->filter(fn (array $advisee) => $advisee['status'] === 'On Track')->count(),
                     'for_defense' => $advisees->filter(fn (array $advisee) => $advisee['approved_count'] > 0)->count(),
                     'needs_guidance' => $advisees->filter(fn (array $advisee) => $advisee['needs_guidance'])->count(),
                     'new_this_term' => $advisees->filter(fn (array $advisee) => $advisee['is_recent'])->count(),
+                    'info_changed' => $advisees->filter(fn (array $advisee) => $advisee['info_changed'])->count(),
                 ],
                 'advisees' => $advisees,
             ],
