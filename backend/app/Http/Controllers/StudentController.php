@@ -282,7 +282,7 @@ class StudentController extends Controller
                 'email'     => $request->email,
                 'password'  => Hash::make($request->temporary_password),
                 'role'      => 'student',
-                'is_active' => true,
+                'is_active' => DB::raw('true'),
             ]);
 
             $profile = StudentProfile::create([
