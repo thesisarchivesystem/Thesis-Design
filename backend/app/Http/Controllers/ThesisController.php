@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ThesisController extends Controller
@@ -29,7 +30,7 @@ class ThesisController extends Controller
     public function index(): JsonResponse
     {
         $theses = Thesis::where('status', 'approved')
-            ->where('is_archived', true)
+            ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
             ->with('submitter:id,name', 'category:id,name,slug')
             ->orderByDesc('approved_at')
             ->paginate(20);
@@ -455,15 +456,27 @@ class ThesisController extends Controller
 
     public function categories(): JsonResponse
     {
+        if (!$this->categoriesFeatureIsAvailable()) {
+            return response()->json([
+                'data' => [
+                    'categories' => [],
+                ],
+            ]);
+        }
+
         $categories = Category::query()
             ->whereRaw('is_active = true')
             ->withCount(['theses as document_count' => function ($query) {
                 $query->where('status', 'approved');
-                $query->where('is_archived', true);
+                if ($this->thesesSupportsArchiving()) {
+                    $query->where('is_archived', true);
+                }
             }])
             ->withMax(['theses as latest_approved_at' => function ($query) {
                 $query->where('status', 'approved');
-                $query->where('is_archived', true);
+                if ($this->thesesSupportsArchiving()) {
+                    $query->where('is_archived', true);
+                }
             }], 'approved_at')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -490,7 +503,7 @@ class ThesisController extends Controller
                 ->with('submitter:id,name')
                 ->whereIn('category_id', $categoryIds)
                 ->where('status', 'approved')
-                ->where('is_archived', true)
+                ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
                 ->orderBy('category_id')
                 ->orderByDesc('approved_at')
                 ->get()
@@ -547,6 +560,18 @@ class ThesisController extends Controller
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function categoriesFeatureIsAvailable(): bool
+    {
+        return Schema::hasTable('categories')
+            && Schema::hasColumn('categories', 'slug')
+            && Schema::hasColumn('theses', 'category_id');
+    }
+
+    private function thesesSupportsArchiving(): bool
+    {
+        return Schema::hasColumn('theses', 'is_archived');
     }
 
     private function normalizeArrayField(mixed $value): array

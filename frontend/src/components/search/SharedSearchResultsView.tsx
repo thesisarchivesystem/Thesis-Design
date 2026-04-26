@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MessageSquare, SearchX, UserRound } from 'lucide-react';
+import { FileText, MessageSquare, SearchX, UserRound, X } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { messageService } from '../../services/messageService';
 import {
@@ -31,9 +31,10 @@ const formatContributionTime = (value?: string | null) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-const getUserRoleBadgeTone = (role: SearchUserItem['role']) => {
-  if (role === 'faculty') return 'status-approved';
-  if (role === 'student') return 'status-pending';
+const getContributionBadgeTone = (status?: string) => {
+  const normalized = String(status ?? '').toLowerCase();
+  if (normalized.includes('approved')) return 'status-approved';
+  if (normalized.includes('shared')) return 'status-pending';
   return 'status-revision';
 };
 
@@ -160,33 +161,33 @@ export default function SharedSearchResultsView() {
                   <button
                     key={user.id}
                     type="button"
-                    className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card)] p-4 text-left shadow-[var(--shadow-sm)]"
+                    className="vpaa-search-user-card"
                     onClick={() => setSelectedUser(user)}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(139,35,50,0.08)] text-[var(--maroon)]">
+                    <div className="vpaa-search-user-card-top">
+                      <div className="vpaa-search-user-card-icon">
                         <UserRound size={20} />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-base font-semibold text-text-primary">{user.name}</div>
-                        <div className="truncate text-sm text-text-secondary">{user.email}</div>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <span className={`status-badge ${getUserRoleBadgeTone(user.role)}`}>{user.role_label}</span>
-                          {user.department ? <span className="vpaa-pill vpaa-category-tag">{user.department}</span> : null}
+                      <div className="vpaa-search-user-card-copy">
+                        <div className="vpaa-search-user-card-name">{user.name}</div>
+                        <div className="vpaa-search-user-card-email">{user.email}</div>
+                        <div className="vpaa-search-user-card-pills">
+                          <span className="vpaa-search-user-pill">{user.role_label}</span>
+                          {user.department ? <span className="vpaa-search-user-pill">{user.department}</span> : null}
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-xl bg-[var(--bg-input)] px-2 py-2">
+                    <div className="vpaa-search-user-card-stats">
+                      <div className="vpaa-search-user-card-stat">
                         <strong className="block text-sm text-text-primary">{user.contributions.theses}</strong>
                         <span className="text-[11px] text-text-secondary">Theses</span>
                       </div>
-                      <div className="rounded-xl bg-[var(--bg-input)] px-2 py-2">
+                      <div className="vpaa-search-user-card-stat">
                         <strong className="block text-sm text-text-primary">{user.contributions.approved_theses}</strong>
                         <span className="text-[11px] text-text-secondary">Approved</span>
                       </div>
-                      <div className="rounded-xl bg-[var(--bg-input)] px-2 py-2">
+                      <div className="vpaa-search-user-card-stat">
                         <strong className="block text-sm text-text-primary">{user.contributions.shared_files}</strong>
                         <span className="text-[11px] text-text-secondary">Shared</span>
                       </div>
@@ -235,70 +236,88 @@ export default function SharedSearchResultsView() {
 
       {selectedUser ? (
         <div className="vpaa-thesis-modal-backdrop" onClick={() => setSelectedUser(null)} role="presentation">
-          <div className="vpaa-thesis-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="user-search-profile-title">
-            <div className="vpaa-thesis-modal-header">
-              <div>
+          <div className="vpaa-thesis-modal vpaa-user-search-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="user-search-profile-title">
+            <div className="vpaa-thesis-modal-header vpaa-user-search-modal-header">
+              <div className="vpaa-user-search-modal-header-copy">
                 <div className="vpaa-thesis-modal-kicker">User Profile</div>
                 <h2 id="user-search-profile-title">{selectedUser.name}</h2>
               </div>
-              <button type="button" className="vpaa-thesis-modal-close" onClick={() => setSelectedUser(null)} aria-label="Close user profile">×</button>
+              <button type="button" className="vpaa-thesis-modal-close vpaa-user-search-modal-close" onClick={() => setSelectedUser(null)} aria-label="Close user profile">
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="vpaa-thesis-modal-grid">
-              <section className="vpaa-thesis-modal-section">
-                <h3>Profile Details</h3>
-                <div className="space-y-2 text-sm text-text-secondary">
-                  <p><strong>Name:</strong> {selectedUser.name}</p>
-                  <p><strong>Role:</strong> {selectedUser.role_label}</p>
-                  <p><strong>Email:</strong> {selectedUser.email}</p>
-                  {selectedUser.department ? <p><strong>Department:</strong> {selectedUser.department}</p> : null}
-                  {selectedUser.college ? <p><strong>College:</strong> {selectedUser.college}</p> : null}
-                  {selectedUser.program ? <p><strong>Program:</strong> {selectedUser.program}</p> : null}
+            <div className="vpaa-user-search-modal-body">
+              <section className="vpaa-user-search-modal-profile">
+                <div className="vpaa-user-search-modal-fields">
+                  <div className="vpaa-user-search-modal-field vpaa-user-search-modal-field-full">
+                    <span>Email</span>
+                    <strong>{selectedUser.email}</strong>
+                  </div>
+                  {selectedUser.department ? (
+                    <div className="vpaa-user-search-modal-field">
+                      <span>Department</span>
+                      <strong>{selectedUser.department}</strong>
+                    </div>
+                  ) : null}
+                  {selectedUser.program ? (
+                    <div className="vpaa-user-search-modal-field">
+                      <span>Program</span>
+                      <strong>{selectedUser.program}</strong>
+                    </div>
+                  ) : null}
+                  {!selectedUser.program && selectedUser.college ? (
+                    <div className="vpaa-user-search-modal-field">
+                      <span>College</span>
+                      <strong>{selectedUser.college}</strong>
+                    </div>
+                  ) : null}
                 </div>
 
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    className="rounded-2xl bg-[var(--maroon)] px-5 py-3 text-sm font-semibold text-white"
-                    onClick={() => void openConversation(selectedUser)}
-                    disabled={startingConversation === selectedUser.id}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <MessageSquare size={16} />
-                      {startingConversation === selectedUser.id ? 'Opening...' : 'Message User'}
-                    </span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="vpaa-user-search-modal-message"
+                  onClick={() => void openConversation(selectedUser)}
+                  disabled={startingConversation === selectedUser.id}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <MessageSquare size={16} />
+                    {startingConversation === selectedUser.id ? 'Opening...' : 'Message User'}
+                  </span>
+                </button>
               </section>
 
-              <section className="vpaa-thesis-modal-section">
-                <h3>Contributions</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-[var(--bg-input)] px-3 py-3 text-center">
-                    <strong className="block text-lg text-text-primary">{selectedUser.contributions.theses}</strong>
-                    <span className="text-xs text-text-secondary">Theses</span>
+              <section className="vpaa-user-search-modal-contributions">
+                <div className="vpaa-user-search-modal-section-heading">Contributions</div>
+                <div className="vpaa-user-search-modal-stats">
+                  <div className="vpaa-user-search-modal-stat">
+                    <strong>{selectedUser.contributions.theses}</strong>
+                    <span>Theses</span>
                   </div>
-                  <div className="rounded-xl bg-[var(--bg-input)] px-3 py-3 text-center">
-                    <strong className="block text-lg text-text-primary">{selectedUser.contributions.approved_theses}</strong>
-                    <span className="text-xs text-text-secondary">Approved</span>
+                  <div className="vpaa-user-search-modal-stat">
+                    <strong>{selectedUser.contributions.approved_theses}</strong>
+                    <span>Approved</span>
                   </div>
-                  <div className="rounded-xl bg-[var(--bg-input)] px-3 py-3 text-center">
-                    <strong className="block text-lg text-text-primary">{selectedUser.contributions.shared_files}</strong>
-                    <span className="text-xs text-text-secondary">Shared Files</span>
+                  <div className="vpaa-user-search-modal-stat">
+                    <strong>{selectedUser.contributions.shared_files}</strong>
+                    <span>Shared Files</span>
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-2">
+                <div className="vpaa-user-search-modal-contribution-list">
                   {!userContributionItems.length ? (
                     <p className="text-sm text-text-secondary">No recorded contributions yet.</p>
                   ) : userContributionItems.map((item) => (
-                    <div key={`${item.type}-${item.id}`} className="rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 py-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-semibold text-text-primary">{item.title}</div>
-                          <div className="text-xs text-text-secondary">{item.type} • {item.status}</div>
+                    <div key={`${item.type}-${item.id}`} className="vpaa-user-search-modal-contribution-item">
+                      <div className="vpaa-user-search-modal-contribution-icon">
+                        <FileText size={18} />
+                      </div>
+                      <div className="vpaa-user-search-modal-contribution-copy">
+                        <div className="vpaa-user-search-modal-contribution-title">{item.title}</div>
+                        <div className="vpaa-user-search-modal-contribution-meta">
+                          <span className={`status-badge ${getContributionBadgeTone(item.status)}`}>{item.status}</span>
+                          <span>{formatContributionTime(item.created_at)}</span>
                         </div>
-                        <div className="text-xs text-text-secondary">{formatContributionTime(item.created_at)}</div>
                       </div>
                     </div>
                   ))}

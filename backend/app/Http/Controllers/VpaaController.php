@@ -13,6 +13,7 @@ use App\Services\DailyQuoteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class VpaaController extends Controller
 {
@@ -82,8 +83,8 @@ class VpaaController extends Controller
 
         $recentTheses = Thesis::query()
             ->where('status', 'approved')
-            ->where('is_archived', true)
             ->with(['submitter:id,name', 'category:id,name'])
+            ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
             ->orderByDesc('approved_at')
             ->orderByDesc('created_at')
             ->limit(8)
@@ -141,9 +142,9 @@ class VpaaController extends Controller
 
         $theses = Thesis::query()
             ->where('status', 'approved')
-            ->where('is_archived', true)
             ->whereIn('id', $topThesisIds)
             ->with(['submitter:id,name', 'category:id,name'])
+            ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
             ->get()
             ->keyBy('id');
 
@@ -316,15 +317,27 @@ class VpaaController extends Controller
 
     public function categories(Request $request): JsonResponse
     {
+        if (!$this->categoriesFeatureIsAvailable()) {
+            return response()->json([
+                'data' => [
+                    'categories' => [],
+                ],
+            ]);
+        }
+
         $categories = Category::query()
             ->whereRaw('is_active = true')
             ->withCount(['theses as document_count' => function ($query) {
                 $query->where('status', 'approved');
-                $query->where('is_archived', true);
+                if ($this->thesesSupportsArchiving()) {
+                    $query->where('is_archived', true);
+                }
             }])
             ->withMax(['theses as latest_approved_at' => function ($query) {
                 $query->where('status', 'approved');
-                $query->where('is_archived', true);
+                if ($this->thesesSupportsArchiving()) {
+                    $query->where('is_archived', true);
+                }
             }], 'approved_at')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -334,7 +347,6 @@ class VpaaController extends Controller
                 $theses = Thesis::query()
                     ->where('category_id', $category->id)
                     ->where('status', 'approved')
-                    ->where('is_archived', true)
                     ->select([
                         'id',
                         'title',
@@ -349,6 +361,7 @@ class VpaaController extends Controller
                         'submitted_by',
                     ])
                     ->with('submitter:id,name')
+                    ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
                     ->orderByDesc('approved_at')
                     ->limit(6)
                     ->get();
@@ -401,6 +414,18 @@ class VpaaController extends Controller
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function categoriesFeatureIsAvailable(): bool
+    {
+        return Schema::hasTable('categories')
+            && Schema::hasColumn('categories', 'slug')
+            && Schema::hasColumn('theses', 'category_id');
+    }
+
+    private function thesesSupportsArchiving(): bool
+    {
+        return Schema::hasColumn('theses', 'is_archived');
     }
 
     private function presentActivityAction(string $action): array
