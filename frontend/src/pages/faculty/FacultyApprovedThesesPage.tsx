@@ -182,32 +182,30 @@ export default function FacultyApprovedThesesPage() {
         {success ? <div className="rounded-xl bg-[rgba(61,139,74,0.10)] px-4 py-3 text-sm font-medium text-[var(--sage)]">{success}</div> : null}
         {error ? <div className="rounded-xl bg-[rgba(139,35,50,0.08)] px-4 py-3 text-sm font-medium text-[var(--maroon)]">{error}</div> : null}
 
-        <section className="grid gap-3 xl:grid-cols-4">
+        <section className="student-submissions-stats">
           {stats.map(({ label, value, icon: Icon, tone }) => (
-            <article key={label} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card)] p-3.5 shadow-[var(--shadow-sm)]">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="mb-1 text-xs font-medium text-text-secondary">{label}</p>
-                  <h2 className="mb-0 text-2xl leading-none text-text-primary" style={{ fontFamily: 'DM Serif Display, serif' }}>{value}</h2>
-                </div>
-                <span
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl"
-                  style={{
-                    background:
-                      tone === 'maroon' ? 'rgba(139,35,50,0.08)'
-                        : tone === 'gold' ? 'rgba(201,150,58,0.10)'
-                          : tone === 'terracotta' ? 'rgba(196,101,74,0.10)'
-                            : 'rgba(61,139,74,0.10)',
-                    color:
-                      tone === 'maroon' ? 'var(--maroon)'
-                        : tone === 'gold' ? 'var(--gold)'
-                          : tone === 'terracotta' ? 'var(--terracotta)'
-                            : 'var(--sage)',
-                  }}
-                >
-                  <Icon size={18} />
-                </span>
+            <article key={label} className="student-submissions-stat-card">
+              <div>
+                <span>{label}</span>
+                <strong>{value}</strong>
               </div>
+              <span
+                className="student-submissions-stat-icon"
+                style={{
+                  background:
+                    tone === 'maroon' ? 'rgba(139,35,50,0.08)'
+                      : tone === 'gold' ? 'rgba(201,150,58,0.10)'
+                        : tone === 'terracotta' ? 'rgba(196,101,74,0.10)'
+                          : 'rgba(61,139,74,0.10)',
+                  color:
+                    tone === 'maroon' ? 'var(--maroon)'
+                      : tone === 'gold' ? 'var(--gold)'
+                        : tone === 'terracotta' ? 'var(--terracotta)'
+                          : 'var(--sage)',
+                }}
+              >
+                <Icon size={18} />
+              </span>
             </article>
           ))}
         </section>

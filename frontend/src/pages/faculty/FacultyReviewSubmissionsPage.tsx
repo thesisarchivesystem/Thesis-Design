@@ -110,32 +110,30 @@ export default function FacultyReviewSubmissionsPage() {
       <div className="space-y-5">
         {error ? <div className="rounded-xl bg-[rgba(139,35,50,0.08)] px-4 py-3 text-sm font-medium text-[var(--maroon)]">{error}</div> : null}
 
-        <section className="grid gap-4 xl:grid-cols-4">
+        <section className="student-submissions-stats">
           {stats.map(({ label, value, icon: Icon, tone }) => (
-            <article key={label} className="rounded-[18px] border border-[var(--border)] bg-[var(--bg-card)] p-5 shadow-[var(--shadow-sm)]">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="mb-4 text-sm font-medium text-text-secondary">{label}</p>
-                  <h2 className="mb-0 text-[2.1rem] leading-none text-text-primary" style={{ fontFamily: 'DM Serif Display, serif' }}>{isLoading ? '--' : value}</h2>
-                </div>
-                <span
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-2xl"
-                  style={{
-                    background:
-                      tone === 'maroon' ? 'rgba(139,35,50,0.08)'
-                        : tone === 'sky' ? 'rgba(74,143,181,0.10)'
-                          : tone === 'terracotta' ? 'rgba(196,101,74,0.10)'
-                            : 'rgba(61,139,74,0.10)',
-                    color:
-                      tone === 'maroon' ? 'var(--maroon)'
-                        : tone === 'sky' ? 'var(--sky)'
-                          : tone === 'terracotta' ? 'var(--terracotta)'
-                            : 'var(--sage)',
-                  }}
-                >
-                  <Icon size={18} />
-                </span>
+            <article key={label} className="student-submissions-stat-card">
+              <div>
+                <span>{label}</span>
+                <strong>{isLoading ? '--' : value}</strong>
               </div>
+              <span
+                className="student-submissions-stat-icon"
+                style={{
+                  background:
+                    tone === 'maroon' ? 'rgba(139,35,50,0.08)'
+                      : tone === 'sky' ? 'rgba(74,143,181,0.10)'
+                        : tone === 'terracotta' ? 'rgba(196,101,74,0.10)'
+                          : 'rgba(61,139,74,0.10)',
+                  color:
+                    tone === 'maroon' ? 'var(--maroon)'
+                      : tone === 'sky' ? 'var(--sky)'
+                        : tone === 'terracotta' ? 'var(--terracotta)'
+                          : 'var(--sage)',
+                }}
+              >
+                <Icon size={18} />
+              </span>
             </article>
           ))}
         </section>
