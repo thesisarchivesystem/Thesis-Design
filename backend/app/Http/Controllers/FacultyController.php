@@ -362,7 +362,7 @@ class FacultyController extends Controller
                 'file_name' => $fileUpload['name'] ?? ($validated['file_name'] ?? $file->file_name),
                 'file_size' => $fileUpload['size'] ?? $file->file_size,
                 'mime_type' => $fileUpload['mime_type'] ?? $file->mime_type,
-                'is_draft' => $isDraft,
+                'is_draft' => DB::raw($isDraft ? 'true' : 'false'),
                 'shared_at' => $isDraft ? null : ($file->shared_at ?? now()),
             ]);
 
@@ -474,7 +474,7 @@ class FacultyController extends Controller
                 'file_name' => $fileUpload['name'] ?? ($validated['file_name'] ?? null),
                 'file_size' => $fileUpload['size'] ?? ($validated['file_size'] ?? null),
                 'mime_type' => $fileUpload['mime_type'] ?? null,
-                'is_draft' => $isDraft,
+                'is_draft' => DB::raw($isDraft ? 'true' : 'false'),
                 'shared_at' => $isDraft ? null : now(),
             ]);
 
@@ -484,7 +484,7 @@ class FacultyController extends Controller
                 );
             }
 
-            return $file->load(['category:id,name,slug', 'recipients.user:id,name,email']);
+            return $file->refresh()->load(['category:id,name,slug', 'recipients.user:id,name,email']);
         });
 
         $this->logger->log($request->user(), 'faculty.library_item_created', 'shared_file', $sharedFile->id, [
