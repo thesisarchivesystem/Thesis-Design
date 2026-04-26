@@ -1263,6 +1263,113 @@
   color: var(--text-secondary);
 }
 
+.vpaa-search-user-card {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 22px;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.vpaa-search-user-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(139, 35, 50, 0.16);
+  box-shadow: 0 16px 28px rgba(80, 37, 34, 0.08);
+}
+
+.vpaa-search-user-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 22px 18px;
+}
+
+.vpaa-search-user-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(245, 206, 211, 0.95), rgba(245, 227, 230, 0.95));
+  color: var(--maroon);
+  flex-shrink: 0;
+}
+
+.vpaa-search-user-card-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.vpaa-search-user-card-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.vpaa-search-user-card-email {
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.vpaa-search-user-card-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.vpaa-search-user-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(200, 157, 162, 0.7);
+  background: rgba(255, 244, 245, 0.92);
+  color: var(--maroon);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.vpaa-search-user-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 18px 0 16px;
+  border-top: 1px solid var(--border);
+  background: rgba(247, 243, 236, 0.72);
+  text-align: center;
+}
+
+.vpaa-search-user-card-stat {
+  padding: 6px 12px;
+}
+
+.vpaa-search-user-card-stat:not(:first-child) {
+  border-left: 1px solid rgba(143, 108, 93, 0.2);
+}
+
+.vpaa-search-user-card-stat strong {
+  display: block;
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--maroon);
+}
+
+.vpaa-search-user-card-stat span {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 .student-upload-shell {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.95fr);
@@ -5397,6 +5504,185 @@
 .vpaa-thesis-modal-chip.keyword {
   background: rgba(74, 143, 181, 0.12);
   color: var(--sky);
+}
+
+.vpaa-user-search-modal {
+  max-width: 760px;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.vpaa-user-search-modal-header {
+  position: relative;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.1) 84px, transparent 85px),
+    radial-gradient(circle at left bottom, rgba(255, 255, 255, 0.07) 0, rgba(255, 255, 255, 0.07) 64px, transparent 65px),
+    linear-gradient(135deg, #8b2332 0%, #b63447 100%);
+  color: white;
+  padding: 36px 32px 28px;
+}
+
+.vpaa-user-search-modal-header .vpaa-thesis-modal-kicker,
+.vpaa-user-search-modal-header h2 {
+  color: white;
+}
+
+.vpaa-user-search-modal-header-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.vpaa-user-search-modal-close {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vpaa-user-search-modal-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: white;
+}
+
+.vpaa-user-search-modal-body {
+  display: grid;
+  gap: 0;
+}
+
+.vpaa-user-search-modal-profile {
+  padding: 28px 32px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.vpaa-user-search-modal-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.vpaa-user-search-modal-field {
+  background: var(--bg-input);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.vpaa-user-search-modal-field-full {
+  grid-column: 1 / -1;
+}
+
+.vpaa-user-search-modal-field span,
+.vpaa-user-search-modal-section-heading {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8f7e67;
+}
+
+.vpaa-user-search-modal-field strong {
+  font-size: 17px;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.vpaa-user-search-modal-message {
+  width: 100%;
+  margin-top: 18px;
+  border: 1px solid rgba(143, 108, 93, 0.38);
+  border-radius: 12px;
+  background: white;
+  color: var(--text-primary);
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.vpaa-user-search-modal-contributions {
+  padding: 22px 32px 30px;
+}
+
+.vpaa-user-search-modal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.vpaa-user-search-modal-stat {
+  background: var(--bg-input);
+  border-radius: 16px;
+  padding: 14px 12px 12px;
+  text-align: center;
+}
+
+.vpaa-user-search-modal-stat strong {
+  display: block;
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--maroon);
+}
+
+.vpaa-user-search-modal-stat span {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.vpaa-user-search-modal-contribution-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.vpaa-user-search-modal-contribution-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  background: var(--bg-input);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.vpaa-user-search-modal-contribution-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(139, 35, 50, 0.08);
+  color: var(--maroon);
+}
+
+.vpaa-user-search-modal-contribution-copy {
+  min-width: 0;
+}
+
+.vpaa-user-search-modal-contribution-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.vpaa-user-search-modal-contribution-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .vpaa-dashboard-panel .vpaa-list-card {

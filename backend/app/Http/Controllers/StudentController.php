@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class StudentController extends Controller
 {
@@ -117,10 +118,15 @@ class StudentController extends Controller
             ->where('status', 'approved')
             ->count();
 
-        $recentTheses = Thesis::query()
+        $recentThesesQuery = Thesis::query()
             ->where('status', 'approved')
-            ->where('is_archived', true)
-            ->with(['submitter:id,name', 'category:id,name'])
+            ->with(['submitter:id,name', 'category:id,name']);
+
+        if ($this->thesesSupportsArchiving()) {
+            $recentThesesQuery->where('is_archived', true);
+        }
+
+        $recentTheses = $recentThesesQuery
             ->orderByDesc('approved_at')
             ->orderByDesc('created_at')
             ->limit(8)
@@ -181,9 +187,9 @@ class StudentController extends Controller
 
         $theses = Thesis::query()
             ->where('status', 'approved')
-            ->where('is_archived', true)
             ->whereIn('id', $topThesisIds)
             ->with(['submitter:id,name', 'category:id,name'])
+            ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
             ->get()
             ->keyBy('id');
 
@@ -234,6 +240,11 @@ class StudentController extends Controller
             'draft' => 'Draft',
             default => 'No submission yet',
         };
+    }
+
+    private function thesesSupportsArchiving(): bool
+    {
+        return Schema::hasColumn('theses', 'is_archived');
     }
 
     public function index(Request $request): JsonResponse
