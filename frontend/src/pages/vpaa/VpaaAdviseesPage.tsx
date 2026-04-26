@@ -14,20 +14,6 @@ const generateTemporaryPassword = () => {
 const EDIT_PANEL_CLOSE_DELAY = 280;
 const EDIT_PANEL_SHELL_CLOSE_DELAY = 180;
 
-const generateNextFacultyId = (faculty: FacultyProfile[], role: string) => {
-  const yearCode = new Date().getFullYear().toString().slice(-2);
-  const prefix = role === 'Dean' ? `DEAN-${yearCode}-` : `FAC-${yearCode}-`;
-  const maxSequence = faculty.reduce((highest, member) => {
-    if (!member.faculty_id.startsWith(prefix)) return highest;
-    const match = member.faculty_id.match(/(\d+)$/);
-    if (!match) return highest;
-    const numericPart = Number(match[1]);
-    return Number.isFinite(numericPart) ? Math.max(highest, numericPart) : highest;
-  }, 0);
-
-  return `${prefix}${String(maxSequence + 1).padStart(4, '0')}`;
-};
-
 const initialForm: FacultyAccountPayload = {
   first_name: '',
   last_name: '',
@@ -131,8 +117,6 @@ export default function VpaaAdviseesPage() {
     () => departmentOptionsByCollege[editForm.college || ''] ?? [],
     [editForm.college],
   );
-  const nextFacultyId = useMemo(() => generateNextFacultyId(faculty, form.faculty_role), [faculty, form.faculty_role]);
-
   const resetCreateForm = () => {
     setForm({
       ...initialForm,
@@ -315,7 +299,7 @@ export default function VpaaAdviseesPage() {
                     <input
                       value={form.faculty_id ?? ''}
                       onChange={(event) => setForm({ ...form, faculty_id: event.target.value })}
-                      placeholder={`Suggested: ${nextFacultyId}`}
+                      placeholder="TUPM-00-000"
                     />
                   </label>
                 <label className="form-field">
