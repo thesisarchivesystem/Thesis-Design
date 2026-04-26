@@ -224,14 +224,14 @@ export default function VpaaAdviseesPage() {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         email: form.email.trim(),
-        faculty_id: nextFacultyId,
+        faculty_id: form.faculty_id?.trim() || undefined,
         rank: form.rank || undefined,
         department: form.department.trim(),
         college: form.college?.trim() || undefined,
         assigned_chair_id: form.assigned_chair_id || undefined,
         temporary_password: form.temporary_password,
       });
-      setSuccess('Faculty account created and stored in Supabase.');
+      setSuccess('Faculty account successfully created!');
       resetCreateForm();
       await loadFaculty();
     } catch (err: any) {
@@ -312,7 +312,11 @@ export default function VpaaAdviseesPage() {
                 <div className="form-grid">
                   <label className="form-field">
                     Faculty ID
-                    <input value={nextFacultyId} readOnly />
+                    <input
+                      value={form.faculty_id ?? ''}
+                      onChange={(event) => setForm({ ...form, faculty_id: event.target.value })}
+                      placeholder={`Suggested: ${nextFacultyId}`}
+                    />
                   </label>
                 <label className="form-field">
                   Institutional Email

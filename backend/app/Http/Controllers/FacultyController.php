@@ -1083,7 +1083,7 @@ class FacultyController extends Controller
                 'email'     => $request->email,
                 'password'  => Hash::make($request->temporary_password),
                 'role'      => 'faculty',
-                'is_active' => true,
+                'is_active' => DB::raw('true'),
             ]);
 
             return FacultyProfile::create([
@@ -1118,10 +1118,7 @@ class FacultyController extends Controller
 
     private function generateNextFacultyId(string $facultyRole): string
     {
-        $yearCode = now()->format('y');
-        $prefix = $facultyRole === 'Dean'
-            ? "DEAN-{$yearCode}-"
-            : "FAC-{$yearCode}-";
+        $prefix = 'TUPM-00-';
 
         $latestMatch = FacultyProfile::query()
             ->pluck('faculty_id')

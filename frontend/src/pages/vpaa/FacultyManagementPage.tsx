@@ -116,12 +116,12 @@ export default function FacultyManagementPage() {
           ...form,
           first_name: form.first_name.trim(),
           last_name: form.last_name.trim(),
-          faculty_id: nextFacultyId,
+          faculty_id: form.faculty_id?.trim() || undefined,
           college: form.college?.trim() || undefined,
           rank: form.rank || undefined,
           assigned_chair_id: form.assigned_chair_id || undefined,
         });
-        setSuccess('Faculty account created in Supabase.');
+        setSuccess('Faculty account successfully created!');
       }
 
       resetForm();
@@ -194,7 +194,12 @@ export default function FacultyManagementPage() {
             <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} placeholder="First name" disabled={submitting} required />
             <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} placeholder="Last name" disabled={submitting} required />
             <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Faculty email" type="email" disabled={submitting} required />
-            <input value={editingId ? form.faculty_id : nextFacultyId} onChange={(e) => setForm({ ...form, faculty_id: e.target.value })} placeholder="Faculty ID" disabled={submitting || !editingId} />
+            <input
+              value={form.faculty_id ?? ''}
+              onChange={(e) => setForm({ ...form, faculty_id: e.target.value })}
+              placeholder={editingId ? 'Faculty ID' : `Faculty ID (suggested: ${nextFacultyId})`}
+              disabled={submitting}
+            />
             <select value={form.college || ''} onChange={(e) => setForm({ ...form, college: e.target.value, department: '' })} disabled={submitting}>
               <option value="">Select college</option>
               {collegeOptions.map((college) => (
