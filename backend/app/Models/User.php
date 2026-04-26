@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -125,6 +127,54 @@ class User extends Authenticatable
 
     public function sendPasswordResetNotification($token): void
     {
+        $brevoApiKey = (string) config('services.brevo.api_key', '');
+
+        if ($brevoApiKey !== '') {
+            $frontendUrl = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+            $resetUrl = $frontendUrl.'/reset-password?token='.urlencode((string) $token).'&email='.urlencode((string) $this->email);
+
+            $senderEmail = (string) config('mail.from.address', 'hello@example.com');
+            $senderName = (string) config('mail.from.name', 'Example');
+            $brevoBaseUrl = rtrim((string) config('services.brevo.base_url', 'https://api.brevo.com/v3'), '/');
+
+            $response = Http::acceptJson()
+                ->withHeaders([
+                    'api-key' => $brevoApiKey,
+                ])
+                ->post($brevoBaseUrl.'/smtp/email', [
+                    'sender' => [
+                        'name' => $senderName,
+                        'email' => $senderEmail,
+                    ],
+                    'to' => [[
+                        'email' => (string) $this->email,
+                        'name' => (string) $this->name,
+                    ]],
+                    'subject' => 'Reset Your Thesis Archive Password',
+                    'htmlContent' => '<p>Hello '.e((string) $this->name).',</p>'
+                        .'<p>We received a request to reset the password for your Thesis Archive account.</p>'
+                        .'<p><a href="'.e($resetUrl).'">Reset Password</a></p>'
+                        .'<p>This password reset link will expire in 60 minutes.</p>'
+                        .'<p>If you did not request a password reset, no further action is needed.</p>',
+                    'textContent' => "Hello {$this->name},\n\n"
+                        ."We received a request to reset the password for your Thesis Archive account.\n"
+                        ."Reset Password: {$resetUrl}\n\n"
+                        .'This password reset link will expire in 60 minutes.\n'
+                        .'If you did not request a password reset, no further action is needed.',
+                ]);
+
+            if ($response->successful()) {
+                return;
+            }
+
+            Log::error('Brevo password reset send failed.', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'user_id' => $this->id,
+                'email' => $this->email,
+            ]);
+        }
+
         $this->notify(new ResetPasswordNotification($token));
     }
 }
