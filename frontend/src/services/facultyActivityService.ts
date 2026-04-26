@@ -10,6 +10,7 @@ export interface FacultyActivitySummary {
 
 export interface FacultyActivityRow {
   id: string;
+  user_id: string | null;
   badge: string;
   tone: 'maroon' | 'sky' | 'sage' | 'terracotta' | 'gold';
   request_record: string;
@@ -24,6 +25,7 @@ export interface FacultyActivityRow {
 
 export interface FacultyActivityLogResponse {
   summary: FacultyActivitySummary;
+  departments: string[];
   logs: FacultyActivityRow[];
 }
 

@@ -91,7 +91,9 @@ class ThesisController extends Controller
             'supplementary_files' => $supplementaryUploads,
             'status'       => 'draft',
             'submitted_by' => $request->user()->id,
+            'submitter_name' => $request->user()->name,
             'adviser_id'   => $request->input('adviser_id'),
+            'adviser_name' => optional($request->input('adviser_id') ? \App\Models\User::find($request->input('adviser_id')) : null)?->name,
         ]);
 
         if ($request->filled('adviser_id')) {
@@ -176,6 +178,10 @@ class ThesisController extends Controller
         $payload = $request->only([
             'title', 'abstract', 'department', 'program', 'category_id', 'category_ids', 'school_year', 'authors', 'adviser_id',
         ]);
+
+        if ($request->exists('adviser_id')) {
+            $payload['adviser_name'] = optional($request->filled('adviser_id') ? \App\Models\User::find($request->input('adviser_id')) : null)?->name;
+        }
 
         if ($request->hasFile('manuscript')) {
             $manuscriptUpload = $this->uploadToSupabase($request->file('manuscript'), 'manuscripts');
@@ -311,13 +317,13 @@ class ThesisController extends Controller
 
         $thesis->update([
             'status'           => $request->status,
-            'is_archived'      => $request->status === 'approved',
+            'is_archived'      => false,
             'adviser_remarks'  => $request->adviser_remarks,
             'rejection_reason' => $request->rejection_reason,
             'revision_due_at'  => $request->status === 'rejected' ? $request->input('revision_due_at') : null,
             'reviewed_at'      => now(),
             'approved_at'      => $request->status === 'approved' ? now() : null,
-            'archived_at'      => $request->status === 'approved' ? now() : null,
+            'archived_at'      => null,
         ]);
 
         // ── Notify student via Ably ──────────────────────────────
@@ -340,15 +346,6 @@ class ThesisController extends Controller
                 ],
             );
 
-            if ($request->status === 'approved') {
-                $this->notifications->notify(
-                    $student,
-                    'thesis.archived',
-                    'Thesis is now archived',
-                    $thesis->title,
-                    ['thesis_id' => $thesis->id],
-                );
-            }
         }
 
         // ── Save DB notification ─────────────────────────────────
@@ -408,6 +405,8 @@ class ThesisController extends Controller
         $thesis->update([
             'is_archived' => true,
             'archived_at' => now(),
+            'archived_by' => $request->user()->id,
+            'archived_by_name' => $request->user()->name,
         ]);
 
         $this->logger->log($request->user(), 'thesis.archived', 'thesis', $thesis->id);
@@ -512,7 +511,7 @@ class ThesisController extends Controller
                     return [
                         'id' => $thesis->id,
                         'title' => $thesis->title,
-                        'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
+                        'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? $thesis->submitter_name ?? 'Unknown author'),
                         'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
                         'abstract' => $thesis->abstract,
                         'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),

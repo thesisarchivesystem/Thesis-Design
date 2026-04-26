@@ -31,7 +31,9 @@ class Thesis extends Model
         'status',
         'is_archived',
         'submitted_by',
+        'submitter_name',
         'adviser_id',
+        'adviser_name',
         'rejection_reason',
         'adviser_remarks',
         'revision_due_at',
@@ -40,6 +42,8 @@ class Thesis extends Model
         'reviewed_at',
         'approved_at',
         'archived_at',
+        'archived_by',
+        'archived_by_name',
     ];
 
     protected $casts = [

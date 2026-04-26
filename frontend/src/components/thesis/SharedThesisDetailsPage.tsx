@@ -95,7 +95,7 @@ export default function SharedThesisDetailsPage({
 
   const authorLabel = useMemo(() => {
     if (!thesis) return 'Unknown author';
-    return thesis.authors?.filter(Boolean).join(', ') || thesis.submitter?.name || 'Unknown author';
+    return thesis.authors?.filter(Boolean).join(', ') || thesis.submitter?.name || thesis.submitter_name || 'Unknown author';
   }, [thesis]);
 
   const metadata = [
@@ -196,7 +196,7 @@ export default function SharedThesisDetailsPage({
                   </div>
                   <div className="thesis-details-info-copy">
                     <span>Submitter</span>
-                    <strong>{thesis.submitter?.name || 'Not available'}</strong>
+                    <strong>{thesis.submitter?.name || thesis.submitter_name || 'Not available'}</strong>
                   </div>
                 </article>
 

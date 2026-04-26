@@ -19,8 +19,10 @@ export interface Thesis {
   file_size?: number;
   status: ThesisStatus;
   is_archived?: boolean;
-  submitted_by: string;
+  submitted_by?: string | null;
+  submitter_name?: string | null;
   adviser_id?: string;
+  adviser_name?: string | null;
   rejection_reason?: string;
   adviser_remarks?: string;
   revision_due_at?: string;
@@ -29,6 +31,8 @@ export interface Thesis {
   reviewed_at?: string;
   approved_at?: string;
   archived_at?: string;
+  archived_by?: string | null;
+  archived_by_name?: string | null;
   created_at: string;
   submitter?: User;
   adviser?: User;

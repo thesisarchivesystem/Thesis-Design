@@ -108,6 +108,8 @@ class SearchController extends Controller
             : Thesis::query()
                 ->select(['id', 'title', 'submitted_by', 'approved_at', 'created_at', 'status'])
                 ->whereIn('submitted_by', $userIds)
+                ->where('status', 'approved')
+                ->where('is_archived', true)
                 ->orderByDesc('approved_at')
                 ->orderByDesc('created_at')
                 ->get()

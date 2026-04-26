@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { facultyActivityService, type FacultyActivityLogResponse, type FacultyActivityRow } from '../../services/facultyActivityService';
 
 const ACTIVITY_PAGE_SIZE = 10;
+const ACTIVITY_FILTER_OPTIONS = ['all', 'Access Granted', 'Activity Logged', 'Revision Requested', 'New Thesis Uploaded'] as const;
 
 const defaultSummary = {
   actions_today: 0,
@@ -39,6 +40,22 @@ const formatRelativeTime = (timestamp: string) => {
   if (days < 7) return `${days}d ago`;
 
   return itemDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const getActivityFilterLabel = (item: FacultyActivityRow) => {
+  if (item.badge === 'Uploaded') {
+    return 'New Thesis Uploaded';
+  }
+
+  if (item.badge === 'Approved' || item.badge === 'Shared') {
+    return 'Access Granted';
+  }
+
+  if (item.badge === 'Commented') {
+    return 'Revision Requested';
+  }
+
+  return 'Activity Logged';
 };
 
 export default function FacultyActivityLogPage() {
@@ -99,45 +116,48 @@ export default function FacultyActivityLogPage() {
     };
   }, [search]);
 
-  const activityOptions = useMemo(
-    () => ['all', ...new Set((activityData?.logs ?? []).map((item) => item.badge))],
-    [activityData],
-  );
+  const activityOptions = ACTIVITY_FILTER_OPTIONS;
 
   const departmentOptions = useMemo(
-    () => ['all', ...new Set((activityData?.logs ?? []).map((item) => item.department))],
+    () => ['all', ...(activityData?.departments ?? [])],
     [activityData],
   );
 
   const filteredLogs = useMemo(() => {
     const logs = activityData?.logs ?? [];
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+    const dayOfWeek = startOfToday.getDay();
+    const daysSinceMonday = (dayOfWeek + 6) % 7;
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - daysSinceMonday);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 7);
 
     return logs.filter((item) => {
       const normalizedSearch = search.trim().toLowerCase();
-      const matchesSearch = !normalizedSearch || [item.badge, item.request_record, item.account, item.role, item.college, item.department]
+      const matchesSearch = !normalizedSearch || [getActivityFilterLabel(item), item.badge, item.request_record, item.account, item.role, item.college, item.department, item.action]
         .join(' ')
         .toLowerCase()
         .includes(normalizedSearch);
 
-      const matchesActivity = activityFilter === 'all' || item.badge === activityFilter;
+      const matchesActivity = activityFilter === 'all' || getActivityFilterLabel(item) === activityFilter;
       const matchesDepartment = departmentFilter === 'all' || item.department === departmentFilter;
 
       const itemDate = new Date(item.timestamp);
-      const now = new Date();
-      const dayDiff = Number.isNaN(itemDate.getTime()) ? Number.POSITIVE_INFINITY : (now.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24);
-      const normalizedAccount = item.account.toLowerCase();
-      const currentUserName = user?.name?.toLowerCase() ?? '';
+      const hasValidDate = !Number.isNaN(itemDate.getTime());
+      const isToday = hasValidDate && itemDate >= startOfToday && itemDate < startOfTomorrow;
+      const isThisWeek = hasValidDate && itemDate >= startOfWeek && itemDate < endOfWeek;
       const matchesQuick = quickFilter === 'all'
-        || (quickFilter === 'today' && dayDiff < 1)
-        || (quickFilter === 'week' && dayDiff <= 7)
-        || (quickFilter === 'mine' && (
-          (currentUserName !== '' && normalizedAccount.includes(currentUserName))
-          || normalizedAccount.includes('faculty')
-        ));
+        || (quickFilter === 'today' && isToday)
+        || (quickFilter === 'week' && isThisWeek)
+        || (quickFilter === 'mine' && item.user_id === user?.id);
 
       return matchesSearch && matchesActivity && matchesDepartment && matchesQuick;
     });
-  }, [activityData, search, activityFilter, departmentFilter, quickFilter, user?.name]);
+  }, [activityData, search, activityFilter, departmentFilter, quickFilter, user?.id]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLogs.length / ACTIVITY_PAGE_SIZE));
 
@@ -168,15 +188,15 @@ export default function FacultyActivityLogPage() {
       <div className="space-y-5">
         {error ? <div className="rounded-xl bg-[rgba(139,35,50,0.08)] px-4 py-3 text-sm font-medium text-[var(--maroon)]">{error}</div> : null}
 
-        <div className="vpaa-grid-4" style={{ marginBottom: 8 }}>
+        <div className="vpaa-grid-4 student-submissions-stats vpaa-activity-summary-grid" style={{ marginBottom: 28 }}>
           {summaryCards.map((card) => (
-            <div className="vpaa-card vpaa-stat-card" key={card.label}>
+            <article className="student-submissions-stat-card vpaa-card vpaa-activity-summary-card" key={card.label}>
               <div>
-                <div className="vpaa-stat-label">{card.label}</div>
-                <div className="vpaa-stat-value">{card.value}</div>
+                <span>{card.label}</span>
+                <strong>{card.value}</strong>
               </div>
-              <div className={`vpaa-stat-icon ${card.tone}`}>{card.icon}</div>
-            </div>
+              <span className={`student-submissions-stat-icon ${card.tone}`}>{card.icon}</span>
+            </article>
           ))}
         </div>
 
@@ -262,7 +282,7 @@ export default function FacultyActivityLogPage() {
                   </tr>
                 ) : paginatedLogs.length ? paginatedLogs.map((entry) => (
                   <tr key={entry.id}>
-                    <td><span className={`status-badge ${toneClassMap[entry.tone]}`}>{entry.badge}</span></td>
+                    <td><span className={`status-badge ${toneClassMap[entry.tone]}`}>{getActivityFilterLabel(entry)}</span></td>
                     <td className="rt-title">{entry.request_record}</td>
                     <td>{entry.account}</td>
                     <td>{entry.role}</td>

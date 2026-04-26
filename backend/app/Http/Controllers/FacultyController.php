@@ -66,6 +66,22 @@ class FacultyController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
         $search = mb_strtolower(trim((string) $request->input('q', '')));
+        $currentCollege = trim((string) ($facultyProfile->college ?? ''));
+        $configuredDepartments = collect(config('academic.department_college_map', []))
+            ->filter(fn ($college, $department) => filled($department) && trim((string) $college) === $currentCollege)
+            ->keys();
+        $profileDepartments = FacultyProfile::query()
+            ->where('college', $currentCollege)
+            ->whereNotNull('department')
+            ->where('department', '!=', '')
+            ->pluck('department');
+        $allDepartments = $configuredDepartments
+            ->merge($profileDepartments)
+            ->map(fn ($department) => trim((string) $department))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
 
         $logs = ActivityLog::with([
                 'user:id,name,avatar_url,role',
@@ -97,10 +113,11 @@ class FacultyController extends Controller
 
             return [
                 'id' => $log->id,
+                'user_id' => $log->user_id,
                 'badge' => $badge,
                 'tone' => $tone,
                 'request_record' => $subjectThesis?->title ?? str($log->action)->replace('.', ' ')->replace('_', ' ')->title()->toString(),
-                'account' => $log->user?->name ?? $subjectThesis?->submitter?->name ?? 'System',
+                'account' => $log->user?->name ?? $subjectThesis?->submitter?->name ?? $subjectThesis?->submitter_name ?? 'System',
                 'role' => $log->user?->role ? ucfirst((string) $log->user->role) : 'Faculty',
                 'college' => $log->user?->faculty?->college ?? 'No College Assigned',
                 'department' => $subjectThesis?->department ?? $log->user?->faculty?->department ?? $facultyProfile->department,
@@ -147,6 +164,7 @@ class FacultyController extends Controller
         return response()->json([
             'data' => [
                 'summary' => $summary,
+                'departments' => $allDepartments,
                 'logs' => $formattedLogs,
             ],
         ]);
@@ -699,6 +717,10 @@ class FacultyController extends Controller
             'archived_at' => null,
         ];
 
+        if ($request->exists('adviser_id')) {
+            $payload['adviser_name'] = optional($validated['adviser_id'] ? User::find($validated['adviser_id']) : null)?->name;
+        }
+
         if ($request->hasFile('manuscript')) {
             $manuscriptUpload = $this->uploadToSupabase($request->file('manuscript'), 'manuscripts');
             $payload['file_url'] = $manuscriptUpload['url'] ?? null;
@@ -799,10 +821,12 @@ class FacultyController extends Controller
             'status' => $status,
             'is_archived' => false,
             'submitted_by' => $request->user()->id,
+            'submitter_name' => $request->user()->name,
             'approved_at' => $status === 'approved' ? $timestamp : null,
             'submitted_at' => $status === 'approved' ? $timestamp : null,
             'archived_at' => null,
             'adviser_id' => $validated['adviser_id'] ?? null,
+            'adviser_name' => optional(($validated['adviser_id'] ?? null) ? User::find($validated['adviser_id']) : null)?->name,
         ]);
 
         $this->logger->log($request->user(), 'faculty.thesis_created', 'thesis', $thesis->id, [
@@ -855,6 +879,8 @@ class FacultyController extends Controller
         $thesis->update([
             'is_archived' => true,
             'archived_at' => now(),
+            'archived_by' => $request->user()->id,
+            'archived_by_name' => $request->user()->name,
         ]);
 
         $this->logger->log($request->user(), 'faculty.thesis_archived', 'thesis', $thesis->id, [
@@ -903,6 +929,7 @@ class FacultyController extends Controller
 
         $recentTheses = Thesis::query()
             ->where('status', 'approved')
+            ->where('is_archived', true)
             ->where('adviser_id', $user->id)
             ->with(['submitter:id,name', 'category:id,name'])
             ->orderByDesc('approved_at')
@@ -1022,7 +1049,7 @@ class FacultyController extends Controller
             'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
             'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
             'abstract' => $thesis->abstract,
-            'submitter_name' => $thesis->submitter?->name,
+            'submitter_name' => $thesis->submitter?->name ?? $thesis->submitter_name,
             'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
             'department' => $thesis->department,
             'program' => $thesis->program,
@@ -1140,6 +1167,7 @@ class FacultyController extends Controller
 
         $theses = Thesis::query()
             ->where('status', 'approved')
+            ->where('is_archived', true)
             ->whereIn('id', $topThesisIds)
             ->with(['submitter:id,name', 'category:id,name'])
             ->get()

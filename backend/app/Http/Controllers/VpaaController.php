@@ -111,7 +111,7 @@ class VpaaController extends Controller
         return [
             'id' => $thesis->id,
             'title' => $thesis->title,
-            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
+            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? $thesis->submitter_name ?? 'Unknown author'),
             'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
             'abstract' => $thesis->abstract,
             'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
@@ -364,7 +364,7 @@ class VpaaController extends Controller
                         return [
                             'id' => $thesis->id,
                             'title' => $thesis->title,
-                            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
+                            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? $thesis->submitter_name ?? 'Unknown author'),
                             'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
                             'abstract' => $thesis->abstract,
                             'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),

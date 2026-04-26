@@ -31,8 +31,8 @@ const formatDueDate = (value?: string) => {
   });
 };
 
-const getStatusLabel = (status: ThesisStatus) => {
-  if (status === 'approved') return 'Archived';
+const getStatusLabel = (status: ThesisStatus, isArchived?: boolean) => {
+  if (status === 'approved') return isArchived ? 'Archived' : 'Approved';
   if (status === 'rejected') return 'Revisions Needed';
   if (status === 'draft') return 'Draft';
   return 'Under Review';
@@ -45,7 +45,7 @@ const getStatusBadgeClass = (status: ThesisStatus) => {
   return 'student-submission-badge review';
 };
 
-const buildProgressSteps = (status: ThesisStatus) => {
+const buildProgressSteps = (status: ThesisStatus, isArchived?: boolean) => {
   if (status === 'draft') {
     return [
       { label: 'Submitted', tone: 'pending' },
@@ -78,7 +78,7 @@ const buildProgressSteps = (status: ThesisStatus) => {
       { label: 'Submitted', tone: 'done' },
       { label: 'For Review', tone: 'done' },
       { label: 'Approved', tone: 'done' },
-      { label: 'Archived', tone: 'done' },
+      { label: 'Archived', tone: isArchived ? 'done' : 'pending' },
     ];
   }
 
@@ -91,7 +91,7 @@ const buildProgressSteps = (status: ThesisStatus) => {
 };
 
 const getSubmissionActions = (item: Thesis) => {
-  if (item.status === 'approved') return ['View Approval', 'Download PDF'];
+  if (item.status === 'approved') return item.is_archived ? ['View Approval', 'Download PDF'] : ['View Approval'];
   if (item.status === 'rejected') return ['Make Revision', 'Extension Request'];
   if (item.status === 'draft') return ['Continue Editing', 'Edit Draft', 'Delete Draft'];
   return ['View Details', 'Message Adviser', 'Withdraw'];
@@ -370,11 +370,11 @@ export default function StudentMySubmissionsPage() {
                           <p>Revision Due {formatDueDate(item.revision_due_at)}</p>
                         ) : null}
                       </div>
-                      <span className={getStatusBadgeClass(item.status)}>{getStatusLabel(item.status)}</span>
+                      <span className={getStatusBadgeClass(item.status)}>{getStatusLabel(item.status, item.is_archived)}</span>
                     </div>
 
                     <div className="student-submission-list-steps">
-                      {buildProgressSteps(item.status).map((step) => (
+                      {buildProgressSteps(item.status, item.is_archived).map((step) => (
                         <div key={step.label} className={`student-submission-list-step ${step.tone}`}>
                           <span className="student-submission-list-step-dot" />
                           <span>{step.label}</span>
