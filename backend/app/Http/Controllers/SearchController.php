@@ -20,7 +20,7 @@ class SearchController extends Controller
             return response()->json(['results' => []]);
         }
 
-        $searchDocument = "title || ' ' || COALESCE(abstract, '') || ' ' || COALESCE(keywords::text, '')";
+        $searchDocument = "title || ' ' || COALESCE(abstract, '')";
 
         $theses = Thesis::whereRaw(
             "to_tsvector('english', {$searchDocument}) @@ plainto_tsquery('english', ?)",
