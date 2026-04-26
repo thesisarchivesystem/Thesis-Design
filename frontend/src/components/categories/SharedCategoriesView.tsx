@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Blocks, Brain, ChevronRight, Cpu, Database, Globe, Shield, Smartphone, Users2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ThesisArchiveCover from '../thesis/ThesisArchiveCover';
 import { vpaaCategoriesService, type VpaaCategory } from '../../services/vpaaCategoriesService';
 import type { UserRole } from '../../types/user.types';
 
@@ -131,24 +132,21 @@ export default function SharedCategoriesView({ role = null }: SharedCategoriesVi
                   to={thesisHref(thesis)}
                   state={{ thesis }}
                 >
-                  <div className="vpaa-cover vpaa-category-thesis-cover">
-                    <div className="vpaa-cover-meta">Technological University of the Philippines</div>
-                    <div className="vpaa-cover-meta">{thesis.department}</div>
-                    <div className="vpaa-cover-title">{thesis.title}</div>
-                  </div>
-
-                  <div className="vpaa-category-thesis-body">
-                    <h3>{thesis.title}</h3>
-                    <p>{thesis.author}{thesis.year ? ` - ${thesis.year}` : ''}</p>
-                    <div className="vpaa-category-tags">
-                      {[thesis.categoryLabel, ...(thesis.keywords.length ? thesis.keywords : [thesis.program || thesis.school_year || thesis.department])]
-                        .filter(Boolean)
-                        .slice(0, 3)
-                        .map((tag) => (
-                          <span className="vpaa-pill vpaa-category-tag" key={tag}>{tag}</span>
-                        ))}
-                    </div>
-                  </div>
+                  <ThesisArchiveCover
+                    className="vpaa-category-thesis-cover"
+                    title={thesis.title}
+                    college={thesis.college}
+                    department={thesis.department}
+                    author={thesis.author}
+                    authors={thesis.authors}
+                    year={thesis.year}
+                    categories={thesis.categories?.length
+                      ? thesis.categories
+                      : [thesis.categoryLabel, ...(thesis.keywords.length ? thesis.keywords : [thesis.program || thesis.school_year || thesis.department])]
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((tag, index) => ({ id: `${thesis.id}-${index}`, name: tag }))}
+                  />
                 </Link>
               ))}
             </div>

@@ -3,8 +3,11 @@ import api from './api';
 export type SearchResultItem = {
   id: string;
   title: string;
+  college?: string | null;
   department: string;
   program?: string | null;
+  author?: string;
+  year?: string | null;
   authors?: string[];
   keywords?: string[];
   created_at?: string;
@@ -15,7 +18,13 @@ export type SearchResultItem = {
   category?: {
     id: string;
     name: string;
+    slug?: string;
   };
+  categories?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
 };
 
 export type SearchUserContributionItem = {

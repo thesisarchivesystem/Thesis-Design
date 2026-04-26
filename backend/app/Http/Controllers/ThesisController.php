@@ -219,6 +219,7 @@ class ThesisController extends Controller
             'approved_at' => null,
             'rejection_reason' => null,
             'adviser_remarks' => null,
+            'revision_due_at' => null,
         ]);
 
         $this->logger->log($request->user(), 'thesis.submitted', 'thesis', $thesis->id);
@@ -298,6 +299,7 @@ class ThesisController extends Controller
             'status'           => 'required|in:approved,rejected',
             'adviser_remarks'  => 'nullable|string|max:2000',
             'rejection_reason' => 'required_if:status,rejected|nullable|string|max:2000',
+            'revision_due_at'  => 'required_if:status,rejected|nullable|date',
         ]);
 
         $thesis = Thesis::findOrFail($id);
@@ -306,6 +308,7 @@ class ThesisController extends Controller
             'status'           => $request->status,
             'adviser_remarks'  => $request->adviser_remarks,
             'rejection_reason' => $request->rejection_reason,
+            'revision_due_at'  => $request->status === 'rejected' ? $request->input('revision_due_at') : null,
             'reviewed_at'      => now(),
             'approved_at'      => $request->status === 'approved' ? now() : null,
         ]);
@@ -361,7 +364,7 @@ class ThesisController extends Controller
             $this->logger->log($request->user(), 'thesis.archived', 'thesis', $thesis->id);
         }
 
-        return response()->json(['data' => $thesis]);
+        return response()->json(['data' => $this->transformThesisWithArchiveMetadata($thesis)]);
     }
 
     public function pendingReview(Request $request): JsonResponse
@@ -481,9 +484,11 @@ class ThesisController extends Controller
                         'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
                         'abstract' => $thesis->abstract,
                         'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
+                        'college' => $this->resolveCollegeForDepartment($thesis->department),
                         'department' => $thesis->department,
                         'program' => $thesis->program,
                         'school_year' => $thesis->school_year,
+                        'categories' => $this->resolveCategorySummaries($thesis),
                         'keywords' => [],
                         'approved_at' => optional($thesis->approved_at)?->toISOString(),
                     ];
@@ -513,6 +518,61 @@ class ThesisController extends Controller
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function transformThesisWithArchiveMetadata(Thesis $thesis): array
+    {
+        $data = $thesis->toArray();
+        $data['college'] = $this->resolveCollegeForDepartment($thesis->department);
+        $data['categories'] = $this->resolveCategorySummaries($thesis);
+
+        return $data;
+    }
+
+    private function resolveCollegeForDepartment(?string $department): ?string
+    {
+        $normalizedDepartment = trim((string) $department);
+
+        if ($normalizedDepartment === '') {
+            return null;
+        }
+
+        $departmentCollegeMap = config('academic.department_college_map', []);
+
+        return isset($departmentCollegeMap[$normalizedDepartment])
+            ? trim((string) $departmentCollegeMap[$normalizedDepartment])
+            : null;
+    }
+
+    private function resolveCategorySummaries(Thesis $thesis): array
+    {
+        $categoryIds = collect($thesis->category_ids ?? [])
+            ->filter(fn ($id) => is_string($id) && trim($id) !== '')
+            ->values();
+
+        if ($categoryIds->isEmpty() && $thesis->category_id) {
+            $categoryIds = collect([$thesis->category_id]);
+        }
+
+        if ($categoryIds->isEmpty()) {
+            return [];
+        }
+
+        $categories = Category::query()
+            ->whereIn('id', $categoryIds)
+            ->get(['id', 'name', 'slug'])
+            ->keyBy('id');
+
+        return $categoryIds
+            ->map(fn (string $id) => $categories->get($id))
+            ->filter()
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+            ])
+            ->values()
+            ->all();
     }
 
     private function normalizeArrayField(mixed $value): array

@@ -1,91 +1,121 @@
+import { CircleDot, FileText, Lock, RefreshCw, ShieldCheck, Wrench } from 'lucide-react';
+
 const termSections = [
   {
-    title: 'Acceptable Use',
-    copy: 'Users must submit original work, respect intellectual property, and follow campus guidelines for academic integrity.',
+    title: 'Acceptable use',
+    copy: 'Standards for conduct and content submitted to the archive.',
+    icon: <ShieldCheck size={16} />,
+    tone: 'rose',
     items: [
-      'No plagiarism or misrepresentation of authorship.',
-      'Do not upload confidential data without clearance.',
-      'Use the platform only for academic and institutional purposes.',
+      'Submit only original work and accurately represent authorship.',
+      'Do not upload confidential data without proper ethics clearance.',
+      'Use the platform solely for academic and institutional purposes.',
     ],
   },
   {
-    title: 'Submission Ownership',
-    copy: 'Authors retain ownership of their work while granting the university the right to store and display approved theses.',
+    title: 'Submission ownership',
+    copy: 'Rights retained by authors upon archival.',
+    icon: <FileText size={16} />,
+    tone: 'blue',
     items: [
-      'Metadata may be edited by archive administrators.',
-      'Embargo requests must be approved by the adviser.',
-      'Final copies become part of the institutional record.',
+      'Authors retain ownership while granting the university rights to store and display approved theses.',
+      'Embargo requests must be approved by the assigned adviser before archival.',
+      'Final copies become a permanent part of the institutional record.',
     ],
   },
   {
-    title: 'Data Privacy',
-    copy: 'Personal data and sensitive research content are handled according to university privacy policies.',
+    title: 'Data privacy',
+    copy: 'How personal and research data is handled and protected.',
+    icon: <Lock size={16} />,
+    tone: 'gold',
     items: [
-      'Access levels are assigned by role and approval.',
-      'Sensitive data may be redacted or restricted.',
-      'Audit logs are maintained for compliance.',
+      'Access levels are assigned by user role and require approval for elevation.',
+      'Sensitive research content may be redacted or restricted by the library team.',
+      'Audit logs are maintained for compliance and institutional accountability.',
     ],
   },
   {
-    title: 'Service Availability',
-    copy: 'The system may undergo scheduled maintenance with advance notice to users.',
+    title: 'Service availability',
+    copy: 'System maintenance, outages, and deadline provisions.',
+    icon: <Wrench size={16} />,
+    tone: 'green',
     items: [
-      'Outages are communicated through the Support page.',
-      'Deadlines may be extended at department discretion.',
-      'Reports can be filed for technical incidents.',
+      'Scheduled maintenance is announced in advance via the Support page.',
+      'Submission deadlines may be extended at department discretion during outages.',
+      'Technical incidents can be reported through the Support Center.',
     ],
   },
   {
-    title: 'Policy Updates',
-    copy: 'Terms may be revised to reflect changes in academic, privacy, or security requirements.',
+    title: 'Policy updates',
+    copy: 'How changes to these terms are communicated and applied.',
+    icon: <RefreshCw size={16} />,
+    tone: 'neutral',
     items: [
-      'Major updates are announced to all users.',
-      'Continued use indicates acceptance of changes.',
-      'Archived versions are kept for reference.',
-    ],
-  },
-  {
-    title: 'Contact & Appeals',
-    copy: 'Questions or disputes should be addressed through official channels.',
-    items: [
-      'Submit concerns via the Support Center.',
-      'Appeals are reviewed by the academic office.',
-      'Policy clarification is available on request.',
+      'Terms may be revised to reflect changes in academic, privacy, or security requirements.',
+      'Major updates are announced to all users before taking effect.',
+      'Previous versions are archived and available on request.',
     ],
   },
 ];
 
 export default function TermsAndConditionsContent() {
   return (
-    <>
-      <section className="vpaa-page-hero vpaa-page-hero-terms">
-        <div className="vpaa-terms-hero-copy">
-          <h2>Terms & Conditions</h2>
+    <div className="vpaa-terms-reference-layout">
+      <section className="vpaa-terms-reference-hero">
+        <article className="vpaa-terms-reference-summary">
+          <span className="vpaa-terms-reference-label">Legal &amp; Policy</span>
+          <h2>Using the Thesis Archive means agreeing to these terms</h2>
           <p>
-            These terms outline responsibilities for using the Thesis Archive Management System,
-            including submission rules, data handling, and institutional policies.
+            These terms outline your responsibilities as a user of the Thesis Archive Management System covering
+            submission conduct, data handling, ownership rights, and institutional policies. Continued use of the
+            system constitutes acceptance.
           </p>
-        </div>
-        <div className="vpaa-page-hero-panel">
-          <h3>Effective Date</h3>
-          <p>February 7, 2026</p>
+        </article>
+
+        <aside className="vpaa-terms-reference-date">
+          <span className="vpaa-terms-reference-label">Effective Date</span>
+          <strong>February 7, 2026</strong>
           <p>Applies to all student, adviser, and librarian accounts.</p>
-        </div>
+        </aside>
       </section>
 
-      <section className="vpaa-terms-grid">
+      <section className="vpaa-terms-reference-grid">
         {termSections.map((section) => (
-          <article className="vpaa-card vpaa-terms-section" key={section.title}>
-            <h3>{section.title}</h3>
-            <p>{section.copy}</p>
-            <div className="vpaa-terms-list">
+          <article className="vpaa-terms-reference-card" key={section.title}>
+            <div className="vpaa-terms-reference-card-head">
+              <span className={`vpaa-terms-reference-icon ${section.tone}`}>{section.icon}</span>
+              <div>
+                <h3>{section.title}</h3>
+                <p>{section.copy}</p>
+              </div>
+            </div>
+            <div className="vpaa-terms-reference-list">
               {section.items.map((item) => (
-                <div className="vpaa-terms-item" key={item}>{item}</div>
+                <div className="vpaa-terms-reference-item" key={item}>
+                  <CircleDot size={10} />
+                  <span>{item}</span>
+                </div>
               ))}
             </div>
           </article>
         ))}
       </section>
-    </>
+
+      <section className="vpaa-terms-reference-footer">
+        <div className="vpaa-terms-reference-footer-copy">
+          <div className="vpaa-terms-reference-footer-icon">
+            <ShieldCheck size={16} />
+          </div>
+          <div>
+            <strong>You are currently bound by these terms</strong>
+            <p>Continued use of the Thesis Archive constitutes acceptance of all policies above. Last reviewed: February 7, 2026.</p>
+          </div>
+        </div>
+        <div className="vpaa-terms-reference-actions">
+          <button type="button" className="vpaa-terms-reference-secondary">Download PDF</button>
+          <button type="button" className="vpaa-terms-reference-primary">Contact Support</button>
+        </div>
+      </section>
+    </div>
   );
 }

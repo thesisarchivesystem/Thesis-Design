@@ -99,11 +99,14 @@ export default function SharedThesisDetailsPage({
   }, [thesis]);
 
   const metadata = [
+    thesis?.college,
     thesis?.department,
     thesis?.program,
     thesis?.school_year,
-    thesis?.category?.name,
   ].filter(Boolean);
+  const thesisCategories = thesis?.categories?.length
+    ? thesis.categories.slice(0, 5)
+    : (thesis?.category ? [thesis.category] : []);
 
   return (
     <Layout title={title} description={description} hidePageIntro>
@@ -223,8 +226,8 @@ export default function SharedThesisDetailsPage({
                     <FolderOpen size={20} />
                   </div>
                   <div className="thesis-details-info-copy">
-                    <span>Category</span>
-                    <strong>{thesis.category?.name || 'Not assigned yet'}</strong>
+                    <span>Categories</span>
+                    <strong>{thesisCategories.map((category) => category.name).join(', ') || 'Not assigned yet'}</strong>
                   </div>
                 </article>
 

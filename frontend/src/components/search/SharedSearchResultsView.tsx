@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileText, MessageSquare, SearchX, UserRound, X } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import ThesisArchiveCover from '../thesis/ThesisArchiveCover';
 import { messageService } from '../../services/messageService';
 import {
   searchService,
   type SearchResponse,
-  type SearchResultItem,
   type SearchUserContributionItem,
   type SearchUserItem,
 } from '../../services/searchService';
@@ -13,15 +13,6 @@ import {
 const formatProgram = (program?: string | null) => {
   if (!program) return null;
   return /computer science/i.test(program) ? 'CS' : program;
-};
-
-const formatResultMeta = (result: SearchResultItem) => {
-  const parts = [
-    result.authors?.filter(Boolean).join(', ') || result.submitter?.name,
-    result.created_at ? new Date(result.created_at).getFullYear() : null,
-  ].filter(Boolean);
-
-  return parts.join(' - ');
 };
 
 const formatContributionTime = (value?: string | null) => {
@@ -208,24 +199,21 @@ export default function SharedSearchResultsView() {
               <div className="vpaa-category-thesis-grid">
                 {results.theses.map((result) => (
                   <Link className="vpaa-category-thesis-card" key={result.id} to={`${routeBase}/theses/${encodeURIComponent(result.id)}`} state={{ thesis: result }}>
-                    <div className="vpaa-cover vpaa-category-thesis-cover">
-                      <div className="vpaa-cover-meta">Technological University of the Philippines</div>
-                      <div className="vpaa-cover-meta">{result.department || 'Archive Department'}</div>
-                      <div className="vpaa-cover-title">{result.title}</div>
-                    </div>
-
-                    <div className="vpaa-category-thesis-body">
-                      <h3>{result.title}</h3>
-                      <p>{formatResultMeta(result)}</p>
-                      <div className="vpaa-category-tags">
-                        {[formatProgram(result.program), ...(result.keywords ?? [])]
-                          .filter(Boolean)
-                          .slice(0, 3)
-                          .map((tag) => (
-                            <span className="vpaa-pill vpaa-category-tag" key={tag}>{tag}</span>
-                          ))}
-                      </div>
-                    </div>
+                    <ThesisArchiveCover
+                      className="vpaa-category-thesis-cover"
+                      title={result.title}
+                      college={result.college}
+                      department={result.department}
+                      author={result.author}
+                      authors={result.authors}
+                      year={result.year}
+                      categories={result.categories?.length
+                        ? result.categories
+                        : [formatProgram(result.program), ...(result.keywords ?? [])]
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map((tag, index) => ({ id: `${result.id}-${index}`, name: String(tag) }))}
+                    />
                   </Link>
                 ))}
               </div>

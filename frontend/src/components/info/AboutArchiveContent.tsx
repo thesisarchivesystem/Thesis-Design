@@ -1,75 +1,98 @@
-import { BookOpenText, Database, FolderKanban, ShieldCheck, Sparkles, Waypoints } from 'lucide-react';
+import { BadgeCheck, Library, Search } from 'lucide-react';
 
-const pillars = [
+const workflowSteps = [
+  'Student submits draft',
+  'Adviser reviews & comments',
+  'Panel validates thesis',
+  'Library archives final copy',
+  'Published to archive',
+];
+
+const userGroups = [
   {
-    title: 'Purpose',
-    copy: 'Provide a trusted repository where theses are preserved, discoverable, and categorized by department, year, and keywords.',
-    icon: <BookOpenText size={20} />,
-    tone: 'si-maroon',
+    code: 'ST',
+    title: 'Students',
+    copy: 'Submit drafts, track revision status, and explore prior research for reference during proposal writing.',
+    tone: 'student',
   },
   {
-    title: 'How It Works',
-    copy: 'Students submit their work, advisers and panels validate it, and the library team archives the final copy for campus access.',
-    icon: <ShieldCheck size={20} />,
-    tone: 'si-sage',
+    code: 'FA',
+    title: 'Faculty & Advisers',
+    copy: 'Review advisee submissions, provide revision feedback, and monitor progress from proposal to defense.',
+    tone: 'faculty',
   },
   {
-    title: 'Who It Serves',
-    copy: 'Students looking for references, advisers reviewing progress, and librarians maintaining the university research legacy.',
-    icon: <FolderKanban size={20} />,
-    tone: 'si-sky',
-  },
-  {
-    title: 'Data Stewardship',
-    copy: 'Version history, permissions, and secure storage ensure that every document stays intact and traceable over time.',
-    icon: <Database size={20} />,
-    tone: 'si-terracotta',
-  },
-  {
-    title: 'Discovery',
-    copy: 'Advanced search, tags, and category views help students find relevant studies across disciplines quickly.',
-    icon: <Waypoints size={20} />,
-    tone: 'si-gold',
-  },
-  {
-    title: 'Impact',
-    copy: 'By reusing prior research, students build stronger proposals and prevent duplicated work across batches.',
-    icon: <Sparkles size={20} />,
-    tone: 'si-maroon',
+    code: 'VP',
+    title: 'VPAA',
+    copy: 'Oversee archive governance, monitor submission flow, and help keep thesis records accurate, compliant, and institution-ready.',
+    tone: 'library',
   },
 ];
 
 export default function AboutArchiveContent() {
   return (
-    <>
-      <section className="vpaa-page-hero vpaa-page-hero-about">
-        <div className="vpaa-about-hero-copy">
-          <h2>About the Thesis Archive</h2>
+    <div className="vpaa-about-reference-layout">
+      <section className="vpaa-about-reference-hero">
+        <article className="vpaa-about-reference-story">
+          <h3>A digital home for every thesis your institution creates</h3>
           <p>
-            The Thesis Archive Management System is a curated digital library for student research. It keeps every
-            approved thesis organized, searchable, and ready for future study. Built for students, advisers, and
-            librarians, it streamlines submission, review, and preservation from proposal to final archive.
+            The Thesis Archive is the university&apos;s central repository for student research. Every approved thesis is
+            stored, organized, and made fully searchable, from first proposal to final submission. It ensures research
+            is preserved, accessible, and never lost.
           </p>
-        </div>
-        <div className="vpaa-page-hero-panel">
-          <h3>What We Protect</h3>
-          <ul className="vpaa-dot-list">
-            <li><span />Verified authorship and academic integrity</li>
-            <li><span />Complete submission history with revisions</li>
-            <li><span />Long-term access to institutional research</li>
+          <div className="vpaa-about-reference-tags" aria-label="Supported user groups">
+            <span>Students</span>
+            <span>Faculty &amp; Advisers</span>
+            <span>Librarians</span>
+          </div>
+        </article>
+
+        <aside className="vpaa-about-reference-protect">
+          <span className="vpaa-about-reference-label">What We Protect</span>
+          <ul>
+            <li><BadgeCheck size={14} /> Verified authorship and academic integrity</li>
+            <li><Search size={14} /> Searchable records organized by department and year</li>
+            <li><Library size={14} /> Role-based access control for students, faculty, and librarians</li>
           </ul>
+          <div className="vpaa-about-reference-callout">
+            <strong>Need the full policy?</strong>
+            <p>See Terms &amp; Conditions for data handling, ownership rights, and compliance rules.</p>
+          </div>
+        </aside>
+      </section>
+
+      <section className="vpaa-about-reference-workflow">
+        <div className="vpaa-about-reference-workflow-head">
+          <span className="vpaa-about-reference-label">Workflow</span>
+          <h3>How a thesis moves through the system</h3>
+        </div>
+        <div className="vpaa-about-reference-steps">
+          {workflowSteps.map((step, index) => (
+            <article className="vpaa-about-reference-step" key={step}>
+              <span>{index + 1}</span>
+              <p>{step}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="vpaa-page-card-grid">
-        {pillars.map((item) => (
-          <article className="vpaa-page-feature-card" key={item.title}>
-            <div className={`vpaa-stat-icon ${item.tone}`}>{item.icon}</div>
-            <h3>{item.title}</h3>
-            <p>{item.copy}</p>
-          </article>
-        ))}
+      <section className="vpaa-about-reference-panel">
+        <div className="vpaa-about-reference-section-head">
+          <span className="vpaa-about-reference-label">Users</span>
+          <h3>Who uses this system</h3>
+        </div>
+        <div className="vpaa-about-reference-user-list vpaa-about-reference-user-list-grid">
+          {userGroups.map((group) => (
+            <div className="vpaa-about-reference-user-item" key={group.title}>
+              <span className={`vpaa-about-reference-user-badge ${group.tone}`}>{group.code}</span>
+              <div>
+                <strong>{group.title}</strong>
+                <p>{group.copy}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
-    </>
+    </div>
   );
 }

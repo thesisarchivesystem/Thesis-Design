@@ -41,4 +41,9 @@ export interface Thesis {
     name: string;
     slug: string;
   };
+  categories?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
 }

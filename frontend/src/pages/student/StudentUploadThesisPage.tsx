@@ -37,6 +37,20 @@ const initialFormState: UploadFormState = {
 };
 
 const MAX_CATEGORY_SELECTIONS = 5;
+const SCHOOL_YEAR_START = 2022;
+const CURRENT_SCHOOL_YEAR = new Date().getFullYear();
+const SCHOOL_YEAR_OPTIONS = Array.from(
+  { length: Math.max(CURRENT_SCHOOL_YEAR - SCHOOL_YEAR_START + 1, 1) },
+  (_, index) => String(SCHOOL_YEAR_START + index),
+);
+
+const getNameInitials = (name?: string | null) =>
+  (name ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('') || 'NA';
 
 const normalizeProgramLabel = (program?: string | null) => {
   const normalized = (program ?? '').trim().toUpperCase();
@@ -124,7 +138,6 @@ export default function StudentUploadThesisPage() {
           ...current,
           department: profile.department || current.department,
           program: normalizeProgramLabel(profile.program) || current.program,
-          school_year: profile.year_level ? String(profile.year_level) : current.school_year,
         }));
       })
       .catch(() => {
@@ -469,7 +482,17 @@ export default function StudentUploadThesisPage() {
 
               <label className={`student-upload-field${fieldErrors.school_year ? ' has-error' : ''}`}>
                 <span><ClipboardList size={14} /> Year</span>
-                <input value={form.school_year} readOnly aria-invalid={Boolean(fieldErrors.school_year)} />
+                <select
+                  className="student-upload-year-select"
+                  value={form.school_year}
+                  onChange={handleChange('school_year')}
+                  aria-invalid={Boolean(fieldErrors.school_year)}
+                >
+                  <option value="" disabled>Select year</option>
+                  {SCHOOL_YEAR_OPTIONS.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
                 {fieldErrors.school_year ? <small className="student-upload-field-error">{fieldErrors.school_year}</small> : null}
               </label>
 
@@ -521,9 +544,15 @@ export default function StudentUploadThesisPage() {
                 />
                 <div className="student-upload-author-tags">
                   {form.authors.map((author) => (
-                    <span className="student-upload-author-chip" key={author}>
-                      {author}
-                      <button type="button" onClick={() => removeAuthor(author)} aria-label={`Remove ${author}`}>
+                    <span className="student-upload-adviser-chip" key={author}>
+                      <span className="student-upload-adviser-avatar">{getNameInitials(author)}</span>
+                      <span className="student-upload-adviser-name">{author}</span>
+                      <button
+                        type="button"
+                        className="student-upload-adviser-remove"
+                        onClick={() => removeAuthor(author)}
+                        aria-label={`Remove ${author}`}
+                      >
                         x
                       </button>
                     </span>
@@ -570,10 +599,12 @@ export default function StudentUploadThesisPage() {
                 ) : null}
                 {selectedAdviser ? (
                   <div className="student-upload-author-tags">
-                    <span className="student-upload-author-chip">
-                      {selectedAdviser.name} - {selectedAdviser.faculty_role}
+                    <span className="student-upload-adviser-chip">
+                      <span className="student-upload-adviser-avatar">{getNameInitials(selectedAdviser.name)}</span>
+                      <span className="student-upload-adviser-name">{selectedAdviser.name}</span>
                       <button
                         type="button"
+                        className="student-upload-adviser-remove"
                         onClick={() => {
                           setForm((current) => ({ ...current, adviser_id: '' }));
                           setAdviserSearch('');
