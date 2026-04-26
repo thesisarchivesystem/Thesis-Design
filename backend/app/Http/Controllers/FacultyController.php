@@ -20,7 +20,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -31,18 +30,6 @@ class FacultyController extends Controller
         private DailyQuoteService $dailyQuoteService,
         private NotificationService $notifications,
     ) {}
-
-    private function currentSchoolYear(): string
-    {
-        $year = now()->year;
-
-        return "{$year}-" . ($year + 1);
-    }
-
-    private function sharedFilesSupportsCategoryIds(): bool
-    {
-        return Schema::hasColumn('shared_files', 'category_ids');
-    }
 
     public function profile(Request $request): JsonResponse
     {
@@ -65,27 +52,10 @@ class FacultyController extends Controller
         $facultyProfile = FacultyProfile::query()
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
-        $search = mb_strtolower(trim((string) $request->input('q', '')));
-        $currentCollege = trim((string) ($facultyProfile->college ?? ''));
-        $configuredDepartments = collect(config('academic.department_college_map', []))
-            ->filter(fn ($college, $department) => filled($department) && trim((string) $college) === $currentCollege)
-            ->keys();
-        $profileDepartments = FacultyProfile::query()
-            ->where('college', $currentCollege)
-            ->whereNotNull('department')
-            ->where('department', '!=', '')
-            ->pluck('department');
-        $allDepartments = $configuredDepartments
-            ->merge($profileDepartments)
-            ->map(fn ($department) => trim((string) $department))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
 
         $logs = ActivityLog::with([
-                'user:id,name,avatar_url,role',
-                'user.faculty:user_id,department,college',
+                'user:id,name,avatar_url',
+                'user.faculty:user_id,department',
             ])
             ->where(function ($query) use ($request, $facultyProfile) {
                 $query->where('user_id', $request->user()->id)
@@ -97,7 +67,7 @@ class FacultyController extends Controller
                     });
             })
             ->orderByDesc('created_at')
-            ->limit(250)
+            ->limit(50)
             ->get();
 
         $thesisIds = $logs->where('subject_type', 'thesis')->pluck('subject_id')->filter()->unique()->values();
@@ -113,45 +83,16 @@ class FacultyController extends Controller
 
             return [
                 'id' => $log->id,
-                'user_id' => $log->user_id,
                 'badge' => $badge,
                 'tone' => $tone,
                 'request_record' => $subjectThesis?->title ?? str($log->action)->replace('.', ' ')->replace('_', ' ')->title()->toString(),
-                'account' => $log->user?->name ?? $subjectThesis?->submitter?->name ?? $subjectThesis?->submitter_name ?? 'System',
-                'role' => $log->user?->role ? ucfirst((string) $log->user->role) : 'Faculty',
-                'college' => $log->user?->faculty?->college ?? 'No College Assigned',
+                'account' => $log->user?->name ?? $subjectThesis?->submitter?->name ?? 'System',
                 'department' => $subjectThesis?->department ?? $log->user?->faculty?->department ?? $facultyProfile->department,
                 'time' => $log->created_at?->diffForHumans(),
                 'timestamp' => optional($log->created_at)?->toISOString(),
                 'action' => $cta,
             ];
-        })
-            ->filter(function (array $entry) use ($search) {
-                if ($search === '') {
-                    return true;
-                }
-
-                return collect([
-                    $entry['badge'] ?? '',
-                    $entry['request_record'] ?? '',
-                    $entry['account'] ?? '',
-                    $entry['role'] ?? '',
-                    $entry['college'] ?? '',
-                    $entry['department'] ?? '',
-                    $entry['action'] ?? '',
-                ])->join(' ')
-                    ? str(collect([
-                        $entry['badge'] ?? '',
-                        $entry['request_record'] ?? '',
-                        $entry['account'] ?? '',
-                        $entry['role'] ?? '',
-                        $entry['college'] ?? '',
-                        $entry['department'] ?? '',
-                        $entry['action'] ?? '',
-                    ])->join(' '))->lower()->contains($search)
-                    : false;
-            })
-            ->values();
+        })->values();
 
         $summary = [
             'actions_today' => $logs->filter(fn (ActivityLog $log) => $log->created_at?->isToday())->count(),
@@ -164,7 +105,6 @@ class FacultyController extends Controller
         return response()->json([
             'data' => [
                 'summary' => $summary,
-                'departments' => $allDepartments,
                 'logs' => $formattedLogs,
             ],
         ]);
@@ -348,13 +288,6 @@ class FacultyController extends Controller
             ->where('uploaded_by', $request->user()->id)
             ->findOrFail($id);
 
-        $categoryIds = $this->normalizeJsonArrayInput($request->input('category_ids'));
-
-        $request->merge([
-            'category_ids' => $categoryIds,
-            'category_id' => $categoryIds[0] ?? $request->input('category_id'),
-        ]);
-
         $validated = $request->validate([
             'title' => 'required|string|max:500',
             'resource_type' => 'required|string|max:100',
@@ -364,8 +297,6 @@ class FacultyController extends Controller
             'college' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
             'category_id' => 'required|uuid|exists:categories,id',
-            'category_ids' => 'required|array|min:1|max:5',
-            'category_ids.*' => 'uuid|exists:categories,id|distinct',
             'school_year' => 'required|string|max:255',
             'authors' => 'nullable|array',
             'authors.*' => 'string|max:255',
@@ -385,25 +316,21 @@ class FacultyController extends Controller
             ->filter()
             ->unique()
             ->values();
-        $primaryCategoryId = $validated['category_ids'][0] ?? $validated['category_id'];
-        $ownerName = $request->user()->name;
-        $schoolYear = $this->currentSchoolYear();
-        $supportsCategoryIds = $this->sharedFilesSupportsCategoryIds();
         $uploadedFile = $request->file('file');
         $fileUpload = $uploadedFile ? $this->uploadToSupabase($uploadedFile, 'shared-resources') : null;
 
-        DB::transaction(function () use ($file, $validated, $isDraft, $shareScope, $recipientIds, $fileUpload, $facultyProfile, $primaryCategoryId, $ownerName, $schoolYear, $supportsCategoryIds) {
-            $updates = [
-                'category_id' => $primaryCategoryId,
+        DB::transaction(function () use ($file, $validated, $isDraft, $shareScope, $recipientIds, $fileUpload, $facultyProfile) {
+            $file->update([
+                'category_id' => $validated['category_id'],
                 'title' => $validated['title'],
                 'resource_type' => $validated['resource_type'],
                 'abstract' => $validated['abstract'] ?? null,
                 'keywords' => $validated['keywords'] ?? [],
-                'authors' => [$ownerName],
+                'authors' => $validated['authors'] ?? [],
                 'program' => null,
-                'department' => $facultyProfile->department,
-                'college' => $facultyProfile->college,
-                'school_year' => $schoolYear,
+                'department' => $validated['department'] ?? $facultyProfile->department,
+                'college' => $validated['college'] ?? $facultyProfile->college,
+                'school_year' => $validated['school_year'],
                 'share_scope' => $shareScope,
                 'target_college' => $validated['target_college'] ?? null,
                 'target_department' => $validated['target_department'] ?? null,
@@ -413,13 +340,7 @@ class FacultyController extends Controller
                 'mime_type' => $fileUpload['mime_type'] ?? $file->mime_type,
                 'is_draft' => $isDraft,
                 'shared_at' => $isDraft ? null : ($file->shared_at ?? now()),
-            ];
-
-            if ($supportsCategoryIds) {
-                $updates['category_ids'] = $validated['category_ids'];
-            }
-
-            $file->update($updates);
+            ]);
 
             if ($shareScope === 'specific_users') {
                 $file->recipients()->delete();
@@ -440,7 +361,6 @@ class FacultyController extends Controller
                 'department' => $file->department,
                 'college' => $file->college,
                 'category_id' => $file->category_id,
-                'category_ids' => $file->category_ids ?? [$file->category_id],
                 'share_scope' => $file->share_scope,
                 'is_draft' => $file->is_draft,
                 'created_at' => $this->formatIsoTimestamp($file->created_at),
@@ -467,13 +387,6 @@ class FacultyController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        $categoryIds = $this->normalizeJsonArrayInput($request->input('category_ids'));
-
-        $request->merge([
-            'category_ids' => $categoryIds,
-            'category_id' => $categoryIds[0] ?? $request->input('category_id'),
-        ]);
-
         $validated = $request->validate([
             'title' => 'required|string|max:500',
             'resource_type' => 'required|string|max:100',
@@ -483,8 +396,6 @@ class FacultyController extends Controller
             'college' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
             'category_id' => 'required|uuid|exists:categories,id',
-            'category_ids' => 'required|array|min:1|max:5',
-            'category_ids.*' => 'uuid|exists:categories,id|distinct',
             'school_year' => 'required|string|max:255',
             'authors' => 'nullable|array',
             'authors.*' => 'string|max:255',
@@ -501,16 +412,12 @@ class FacultyController extends Controller
         ]);
 
         $category = Category::query()->findOrFail($validated['category_id']);
-        $primaryCategoryId = $validated['category_ids'][0] ?? $validated['category_id'];
         $isDraft = (bool) ($validated['is_draft'] ?? false);
         $shareScope = (string) $validated['share_scope'];
         $recipientIds = collect($validated['recipient_ids'] ?? [])
             ->filter()
             ->unique()
             ->values();
-        $ownerName = $request->user()->name;
-        $schoolYear = $this->currentSchoolYear();
-        $supportsCategoryIds = $this->sharedFilesSupportsCategoryIds();
         $uploadedFile = $request->file('file');
         $fileUpload = $uploadedFile ? $this->uploadToSupabase($uploadedFile, 'shared-resources') : null;
 
@@ -522,24 +429,20 @@ class FacultyController extends Controller
             $isDraft,
             $shareScope,
             $recipientIds,
-            $fileUpload,
-            $primaryCategoryId,
-            $ownerName,
-            $schoolYear,
-            $supportsCategoryIds
+            $fileUpload
         ) {
-            $attributes = [
+            $file = SharedFile::create([
                 'uploaded_by' => $request->user()->id,
-                'category_id' => $primaryCategoryId,
+                'category_id' => $category->id,
                 'title' => $validated['title'],
                 'resource_type' => $validated['resource_type'],
                 'abstract' => $validated['abstract'] ?? null,
                 'keywords' => $validated['keywords'] ?? [],
-                'authors' => [$ownerName],
+                'authors' => $validated['authors'] ?? [],
                 'program' => null,
-                'department' => $facultyProfile->department,
-                'college' => $facultyProfile->college,
-                'school_year' => $schoolYear,
+                'department' => $validated['department'] ?? $facultyProfile->department,
+                'college' => $validated['college'] ?? $facultyProfile->college,
+                'school_year' => $validated['school_year'],
                 'share_scope' => $shareScope,
                 'target_college' => $validated['target_college'] ?? null,
                 'target_department' => $validated['target_department'] ?? null,
@@ -549,13 +452,7 @@ class FacultyController extends Controller
                 'mime_type' => $fileUpload['mime_type'] ?? null,
                 'is_draft' => $isDraft,
                 'shared_at' => $isDraft ? null : now(),
-            ];
-
-            if ($supportsCategoryIds) {
-                $attributes['category_ids'] = $validated['category_ids'];
-            }
-
-            $file = SharedFile::create($attributes);
+            ]);
 
             if ($shareScope === 'specific_users') {
                 $file->recipients()->createMany(
@@ -590,7 +487,6 @@ class FacultyController extends Controller
                 'college' => $sharedFile->college,
                 'program' => $sharedFile->program,
                 'category_id' => $sharedFile->category_id,
-                'category_ids' => $sharedFile->category_ids ?? [$sharedFile->category_id],
                 'share_scope' => $sharedFile->share_scope,
                 'is_draft' => $sharedFile->is_draft,
                 'created_at' => $this->formatIsoTimestamp($sharedFile->created_at),
@@ -632,114 +528,6 @@ class FacultyController extends Controller
                     'college' => $college,
                 ];
             })->values(),
-        ]);
-    }
-
-    public function myTheses(Request $request): JsonResponse
-    {
-        $items = Thesis::query()
-            ->with('submitter:id,name', 'adviser:id,name', 'category:id,name,slug')
-            ->where('submitted_by', $request->user()->id)
-            ->orderByDesc('updated_at')
-            ->orderByDesc('created_at')
-            ->get();
-
-        return response()->json([
-            'data' => $items,
-        ]);
-    }
-
-    public function updateManagedThesis(Request $request, string $id): JsonResponse
-    {
-        $facultyProfile = FacultyProfile::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
-
-        $thesis = Thesis::query()
-            ->where('submitted_by', $request->user()->id)
-            ->findOrFail($id);
-
-        if ($thesis->status !== 'draft') {
-            return response()->json(['error' => 'Only faculty draft theses can be updated.'], 403);
-        }
-
-        $categoryIds = $this->normalizeJsonArrayInput($request->input('category_ids'));
-
-        $request->merge([
-            'category_ids' => $categoryIds,
-            'category_id' => $categoryIds[0] ?? $request->input('category_id'),
-        ]);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:500',
-            'abstract' => 'nullable|string',
-            'department' => 'nullable|string|max:255',
-            'program' => 'nullable|string|max:255',
-            'category_id' => 'required|uuid|exists:categories,id',
-            'category_ids' => 'required|array|min:1|max:5',
-            'category_ids.*' => 'uuid|exists:categories,id|distinct',
-            'school_year' => 'required|string|max:255',
-            'authors' => 'nullable|string',
-            'adviser_id' => 'nullable|uuid|exists:users,id',
-            'submission_mode' => 'required|in:draft,submit',
-            'confirm_original' => 'nullable|boolean',
-            'allow_review' => 'nullable|boolean',
-            'manuscript' => 'nullable|file|mimes:pdf|max:51200',
-            'supplementary_files' => 'nullable|array',
-            'supplementary_files.*' => 'file|max:51200',
-        ]);
-
-        $authors = collect(explode(',', (string) ($validated['authors'] ?? '')))
-            ->map(fn (string $author) => trim($author))
-            ->filter()
-            ->values()
-            ->all();
-        $primaryCategoryId = $validated['category_ids'][0] ?? $validated['category_id'];
-
-        if ($validated['submission_mode'] === 'submit' && (!$validated['confirm_original'] || !$validated['allow_review'])) {
-            return response()->json(['error' => 'Please confirm the submission statements before submitting.'], 422);
-        }
-
-        $payload = [
-            'title' => $validated['title'],
-            'abstract' => $validated['abstract'] ?? null,
-            'department' => $validated['department'] ?? $facultyProfile->department,
-            'program' => $validated['program'] ?? null,
-            'category_id' => $primaryCategoryId,
-            'category_ids' => $validated['category_ids'],
-            'school_year' => $validated['school_year'],
-            'authors' => $authors,
-            'adviser_id' => $validated['adviser_id'] ?? null,
-            'status' => $validated['submission_mode'] === 'submit' ? 'approved' : 'draft',
-            'is_archived' => false,
-            'approved_at' => $validated['submission_mode'] === 'submit' ? now() : null,
-            'submitted_at' => $validated['submission_mode'] === 'submit' ? now() : null,
-            'archived_at' => null,
-        ];
-
-        if ($request->exists('adviser_id')) {
-            $payload['adviser_name'] = optional($validated['adviser_id'] ? User::find($validated['adviser_id']) : null)?->name;
-        }
-
-        if ($request->hasFile('manuscript')) {
-            $manuscriptUpload = $this->uploadToSupabase($request->file('manuscript'), 'manuscripts');
-            $payload['file_url'] = $manuscriptUpload['url'] ?? null;
-            $payload['file_name'] = $manuscriptUpload['name'] ?? null;
-            $payload['file_size'] = $manuscriptUpload['size'] ?? null;
-        }
-
-        if ($request->hasFile('supplementary_files')) {
-            $payload['supplementary_files'] = collect($request->file('supplementary_files', []))
-                ->filter()
-                ->map(fn ($file) => $this->uploadToSupabase($file, 'supplementary'))
-                ->values()
-                ->all();
-        }
-
-        $thesis->update($payload);
-
-        return response()->json([
-            'data' => $thesis->fresh()->load('submitter:id,name', 'adviser:id,name', 'category:id,name,slug'),
         ]);
     }
 
@@ -819,14 +607,10 @@ class FacultyController extends Controller
             'file_size' => $manuscriptUpload['size'] ?? null,
             'supplementary_files' => $supplementaryUploads,
             'status' => $status,
-            'is_archived' => false,
             'submitted_by' => $request->user()->id,
-            'submitter_name' => $request->user()->name,
             'approved_at' => $status === 'approved' ? $timestamp : null,
             'submitted_at' => $status === 'approved' ? $timestamp : null,
-            'archived_at' => null,
             'adviser_id' => $validated['adviser_id'] ?? null,
-            'adviser_name' => optional(($validated['adviser_id'] ?? null) ? User::find($validated['adviser_id']) : null)?->name,
         ]);
 
         $this->logger->log($request->user(), 'faculty.thesis_created', 'thesis', $thesis->id, [
@@ -853,62 +637,10 @@ class FacultyController extends Controller
                 'id' => $thesis->id,
                 'title' => $thesis->title,
                 'status' => $thesis->status,
-                'is_archived' => $thesis->is_archived,
                 'file_name' => $thesis->file_name,
                 'supplementary_files' => $thesis->supplementary_files,
             ],
         ], 201);
-    }
-
-    public function archiveManagedThesis(Request $request, string $id): JsonResponse
-    {
-        $thesis = Thesis::query()
-            ->where('submitted_by', $request->user()->id)
-            ->findOrFail($id);
-
-        if ($thesis->status !== 'approved') {
-            return response()->json(['error' => 'Only approved faculty theses can be archived.'], 422);
-        }
-
-        if ($thesis->is_archived) {
-            return response()->json([
-                'data' => $thesis->load('submitter:id,name', 'adviser:id,name', 'category:id,name,slug'),
-            ]);
-        }
-
-        $thesis->update([
-            'is_archived' => true,
-            'archived_at' => now(),
-            'archived_by' => $request->user()->id,
-            'archived_by_name' => $request->user()->name,
-        ]);
-
-        $this->logger->log($request->user(), 'faculty.thesis_archived', 'thesis', $thesis->id, [
-            'status' => $thesis->status,
-        ]);
-
-        $thesis->refresh();
-
-        return response()->json([
-            'data' => $thesis->load('submitter:id,name', 'adviser:id,name', 'category:id,name,slug'),
-        ]);
-    }
-
-    public function destroyManagedThesis(Request $request, string $id): JsonResponse
-    {
-        $thesis = Thesis::query()
-            ->where('submitted_by', $request->user()->id)
-            ->findOrFail($id);
-
-        if ($thesis->status !== 'draft') {
-            return response()->json(['error' => 'Only draft faculty theses can be deleted.'], 403);
-        }
-
-        $thesis->delete();
-
-        return response()->json([
-            'message' => 'Draft deleted successfully.',
-        ]);
     }
 
     public function dashboard(Request $request): JsonResponse
@@ -929,7 +661,6 @@ class FacultyController extends Controller
 
         $recentTheses = Thesis::query()
             ->where('status', 'approved')
-            ->where('is_archived', true)
             ->where('adviser_id', $user->id)
             ->with(['submitter:id,name', 'category:id,name'])
             ->orderByDesc('approved_at')
@@ -963,7 +694,7 @@ class FacultyController extends Controller
             ->firstOrFail();
 
         $students = StudentProfile::query()
-            ->with('user:id,name,email,created_at,updated_at,first_name,last_name')
+            ->with('user:id,name,email,created_at')
             ->where('adviser_id', $request->user()->id)
             ->orderByDesc('created_at')
             ->get();
@@ -1020,11 +751,6 @@ class FacultyController extends Controller
                 'approved_count' => $approvedCount,
                 'needs_guidance' => $status['label'] === 'Needs Guidance',
                 'is_recent' => optional($student->created_at)?->gte(now()->subDays(120)) ?? false,
-                'info_changed' => (
-                    optional($student->updated_at)?->gt($student->created_at) ?? false
-                ) || (
-                    optional($student->user?->updated_at)?->gt($student->user?->created_at) ?? false
-                ),
                 'adviser_name' => $request->user()->name,
             ];
         })->values();
@@ -1037,11 +763,9 @@ class FacultyController extends Controller
                 'summary' => [
                     'total_advisees' => $advisees->count(),
                     'active_proposals' => $advisees->sum('proposal_count'),
-                    'on_track' => $advisees->filter(fn (array $advisee) => $advisee['status'] === 'On Track')->count(),
                     'for_defense' => $advisees->filter(fn (array $advisee) => $advisee['approved_count'] > 0)->count(),
                     'needs_guidance' => $advisees->filter(fn (array $advisee) => $advisee['needs_guidance'])->count(),
                     'new_this_term' => $advisees->filter(fn (array $advisee) => $advisee['is_recent'])->count(),
-                    'info_changed' => $advisees->filter(fn (array $advisee) => $advisee['info_changed'])->count(),
                 ],
                 'advisees' => $advisees,
             ],
@@ -1056,7 +780,7 @@ class FacultyController extends Controller
             'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
             'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
             'abstract' => $thesis->abstract,
-            'submitter_name' => $thesis->submitter?->name ?? $thesis->submitter_name,
+            'submitter_name' => $thesis->submitter?->name,
             'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
             'department' => $thesis->department,
             'program' => $thesis->program,
@@ -1174,7 +898,6 @@ class FacultyController extends Controller
 
         $theses = Thesis::query()
             ->where('status', 'approved')
-            ->where('is_archived', true)
             ->whereIn('id', $topThesisIds)
             ->with(['submitter:id,name', 'category:id,name'])
             ->get()
