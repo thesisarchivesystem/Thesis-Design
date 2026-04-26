@@ -13,7 +13,6 @@ use App\Services\DailyQuoteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Schema;
 
 class VpaaController extends Controller
 {
@@ -84,7 +83,6 @@ class VpaaController extends Controller
         $recentTheses = Thesis::query()
             ->where('status', 'approved')
             ->with(['submitter:id,name', 'category:id,name'])
-            ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
             ->orderByDesc('approved_at')
             ->orderByDesc('created_at')
             ->limit(8)
@@ -112,7 +110,7 @@ class VpaaController extends Controller
         return [
             'id' => $thesis->id,
             'title' => $thesis->title,
-            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? $thesis->submitter_name ?? 'Unknown author'),
+            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
             'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
             'abstract' => $thesis->abstract,
             'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
@@ -144,7 +142,6 @@ class VpaaController extends Controller
             ->where('status', 'approved')
             ->whereIn('id', $topThesisIds)
             ->with(['submitter:id,name', 'category:id,name'])
-            ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
             ->get()
             ->keyBy('id');
 
@@ -317,27 +314,13 @@ class VpaaController extends Controller
 
     public function categories(Request $request): JsonResponse
     {
-        if (!$this->categoriesFeatureIsAvailable()) {
-            return response()->json([
-                'data' => [
-                    'categories' => [],
-                ],
-            ]);
-        }
-
         $categories = Category::query()
             ->whereRaw('is_active = true')
             ->withCount(['theses as document_count' => function ($query) {
                 $query->where('status', 'approved');
-                if ($this->thesesSupportsArchiving()) {
-                    $query->where('is_archived', true);
-                }
             }])
             ->withMax(['theses as latest_approved_at' => function ($query) {
                 $query->where('status', 'approved');
-                if ($this->thesesSupportsArchiving()) {
-                    $query->where('is_archived', true);
-                }
             }], 'approved_at')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -361,7 +344,6 @@ class VpaaController extends Controller
                         'submitted_by',
                     ])
                     ->with('submitter:id,name')
-                    ->when($this->thesesSupportsArchiving(), fn ($query) => $query->where('is_archived', true))
                     ->orderByDesc('approved_at')
                     ->limit(6)
                     ->get();
@@ -377,7 +359,7 @@ class VpaaController extends Controller
                         return [
                             'id' => $thesis->id,
                             'title' => $thesis->title,
-                            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? $thesis->submitter_name ?? 'Unknown author'),
+                            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
                             'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
                             'abstract' => $thesis->abstract,
                             'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
@@ -414,18 +396,6 @@ class VpaaController extends Controller
         } catch (\Throwable) {
             return null;
         }
-    }
-
-    private function categoriesFeatureIsAvailable(): bool
-    {
-        return Schema::hasTable('categories')
-            && Schema::hasColumn('categories', 'slug')
-            && Schema::hasColumn('theses', 'category_id');
-    }
-
-    private function thesesSupportsArchiving(): bool
-    {
-        return Schema::hasColumn('theses', 'is_archived');
     }
 
     private function presentActivityAction(string $action): array
