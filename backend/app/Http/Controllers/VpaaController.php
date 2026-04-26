@@ -345,7 +345,6 @@ class VpaaController extends Controller
                         'department',
                         'program',
                         'school_year',
-                        'keywords',
                         'approved_at',
                         'created_at',
                         'submitted_by',
@@ -373,7 +372,7 @@ class VpaaController extends Controller
                             'department' => $thesis->department,
                             'program' => $thesis->program,
                             'school_year' => $thesis->school_year,
-                            'keywords' => collect($thesis->keywords ?? [])->filter()->values()->all(),
+                            'keywords' => [],
                             'approved_at' => optional($thesis->approved_at)?->toISOString(),
                         ];
                     })->all(),

@@ -685,11 +685,10 @@ class FacultyController extends Controller
 
         $recentTheses = Thesis::query()
             ->where('status', 'approved')
-            ->where('adviser_id', $user->id)
             ->with(['submitter:id,name', 'category:id,name'])
             ->orderByDesc('approved_at')
             ->orderByDesc('created_at')
-            ->limit(4)
+            ->limit(8)
             ->get()
             ->map(fn (Thesis $thesis) => $this->formatDashboardThesis($thesis));
 

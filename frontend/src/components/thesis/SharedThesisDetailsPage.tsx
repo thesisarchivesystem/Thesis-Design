@@ -148,14 +148,32 @@ export default function SharedThesisDetailsPage({
                 </div>
               </div>
 
-              <div className="student-submission-summary">
-                <strong>Abstract</strong>
-                <p>{thesis.abstract || 'No abstract provided for this thesis.'}</p>
+              <div className="thesis-record-section">
+                <strong className="thesis-record-section-label">Abstract</strong>
+                <div className="thesis-record-section-body">
+                  <p>{thesis.abstract || 'No abstract provided for this thesis.'}</p>
+                </div>
               </div>
 
-              <div className="student-submission-summary">
-                <strong>Authors</strong>
-                <p>{authorLabel}</p>
+              <div className="thesis-record-section">
+                <strong className="thesis-record-section-label">Authors</strong>
+                <div className="thesis-record-authors">
+                  {(thesis.authors?.filter(Boolean).length ? thesis.authors.filter(Boolean) : [authorLabel]).map((author) => {
+                    const initials = author
+                      .split(' ')
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((part) => part[0]?.toUpperCase())
+                      .join('');
+
+                    return (
+                      <span key={author} className="thesis-record-author-chip">
+                        <span className="thesis-record-author-avatar">{initials || 'AU'}</span>
+                        <span>{author}</span>
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             </section>
 
