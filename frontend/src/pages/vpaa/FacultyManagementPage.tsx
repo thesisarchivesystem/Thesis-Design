@@ -9,20 +9,6 @@ const generateTemporaryPassword = () => {
   return Array.from({ length: 10 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 };
 
-const generateNextFacultyId = (faculty: FacultyProfile[], role: string) => {
-  const yearCode = new Date().getFullYear().toString().slice(-2);
-  const prefix = role === 'Dean' ? `DEAN-${yearCode}-` : `FAC-${yearCode}-`;
-  const maxSequence = faculty.reduce((highest, member) => {
-    if (!member.faculty_id.startsWith(prefix)) return highest;
-    const match = member.faculty_id.match(/(\d+)$/);
-    if (!match) return highest;
-    const numericPart = Number(match[1]);
-    return Number.isFinite(numericPart) ? Math.max(highest, numericPart) : highest;
-  }, 0);
-
-  return `${prefix}${String(maxSequence + 1).padStart(4, '0')}`;
-};
-
 const initialForm: FacultyAccountPayload = {
   first_name: '',
   last_name: '',
@@ -80,8 +66,6 @@ export default function FacultyManagementPage() {
     () => departmentOptionsByCollege[form.college || ''] ?? [],
     [form.college],
   );
-  const nextFacultyId = useMemo(() => generateNextFacultyId(faculty, form.faculty_role), [faculty, form.faculty_role]);
-
   const resetForm = () => {
     setForm({
       ...initialForm,
