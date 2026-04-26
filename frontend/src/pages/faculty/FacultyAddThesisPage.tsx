@@ -42,6 +42,14 @@ const MAX_CATEGORY_SELECTIONS = 5;
 const COMPUTER_STUDIES_PROGRAMS = ['BSCS', 'BSIT', 'BSIS'];
 const FIXED_SCHOOL_YEAR_OPTIONS = ['2022', '2023', '2024', '2025', '2026'];
 
+const getNameInitials = (name?: string | null) =>
+  (name ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('') || 'NA';
+
 const normalizeProgramLabel = (program?: string | null) => {
   const normalized = (program ?? '').trim().toUpperCase();
 
@@ -514,9 +522,15 @@ export default function FacultyAddThesisPage() {
                 />
                 <div className="student-upload-author-tags">
                   {form.authors.map((author) => (
-                    <span className="student-upload-author-chip" key={author}>
-                      {author}
-                      <button type="button" onClick={() => removeAuthor(author)} aria-label={`Remove ${author}`}>
+                    <span className="student-upload-adviser-chip" key={author}>
+                      <span className="student-upload-adviser-avatar">{getNameInitials(author)}</span>
+                      <span className="student-upload-adviser-name">{author}</span>
+                      <button
+                        type="button"
+                        className="student-upload-adviser-remove"
+                        onClick={() => removeAuthor(author)}
+                        aria-label={`Remove ${author}`}
+                      >
                         x
                       </button>
                     </span>
@@ -564,10 +578,12 @@ export default function FacultyAddThesisPage() {
                 ) : null}
                 {selectedAdviser ? (
                   <div className="student-upload-author-tags">
-                    <span className="student-upload-author-chip">
-                      {selectedAdviser.name} - {selectedAdviser.faculty_role}
+                    <span className="student-upload-adviser-chip">
+                      <span className="student-upload-adviser-avatar">{getNameInitials(selectedAdviser.name)}</span>
+                      <span className="student-upload-adviser-name">{selectedAdviser.name}</span>
                       <button
                         type="button"
+                        className="student-upload-adviser-remove"
                         onClick={() => {
                           setForm((current) => ({ ...current, adviserId: '' }));
                           setAdviserSearch('');

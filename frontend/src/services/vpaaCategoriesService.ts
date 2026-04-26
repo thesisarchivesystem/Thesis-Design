@@ -8,9 +8,11 @@ export interface VpaaCategoryThesis {
   authors?: string[];
   abstract?: string | null;
   year: string | number | null;
+  college?: string | null;
   department: string;
   program?: string | null;
   school_year?: string | null;
+  categories?: Array<{ id: string; name: string; slug: string }>;
   keywords: string[];
   approved_at?: string | null;
 }
@@ -32,9 +34,11 @@ interface RawCategoryThesis {
   authors?: string[];
   abstract?: string | null;
   year?: string | number | null;
+  college?: string | null;
   department?: string;
   program?: string | null;
   school_year?: string | null;
+  categories?: Array<{ id?: string; name?: string; slug?: string }>;
   keywords?: string[];
   approved_at?: string | null;
   created_at?: string | null;
@@ -67,9 +71,19 @@ const normalizeThesis = (thesis: RawCategoryThesis): VpaaCategoryThesis => ({
   authors: Array.isArray(thesis.authors) ? thesis.authors.filter(Boolean) : [],
   abstract: thesis.abstract ?? null,
   year: thesis.year ?? null,
+  college: thesis.college ?? null,
   department: thesis.department ?? 'Unknown department',
   program: thesis.program ?? null,
   school_year: thesis.school_year ?? null,
+  categories: Array.isArray(thesis.categories)
+    ? thesis.categories
+        .filter((category): category is { id?: string; name?: string; slug?: string } => Boolean(category))
+        .map((category, index) => ({
+          id: category.id ?? `${thesis.id ?? 'thesis'}-category-${index}`,
+          name: category.name ?? 'Uncategorized',
+          slug: category.slug ?? '',
+        }))
+    : [],
   keywords: Array.isArray(thesis.keywords) ? thesis.keywords.filter(Boolean) : [],
   approved_at: thesis.approved_at ?? thesis.created_at ?? null,
 });

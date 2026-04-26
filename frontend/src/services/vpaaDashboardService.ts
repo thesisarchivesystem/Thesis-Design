@@ -54,9 +54,11 @@ export interface VpaaDashboardThesis {
   authors?: string[];
   abstract?: string | null;
   year: string | null;
+  college?: string | null;
   department: string;
   program?: string | null;
   category?: string | null;
+  categories?: Array<{ id: string; name: string; slug: string }>;
   keywords?: string[];
   view_count: number;
   approved_at?: string | null;

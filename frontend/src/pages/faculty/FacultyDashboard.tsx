@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Activity, FilePlus2, LoaderCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FacultyLayout from '../../components/faculty/FacultyLayout';
+import ThesisArchiveCover from '../../components/thesis/ThesisArchiveCover';
 import { useAuth } from '../../hooks/useAuth';
 import {
   facultyDashboardService,
@@ -80,27 +81,23 @@ export default function FacultyDashboard() {
         to={thesisHref(item)}
         state={{ thesis: item }}
       >
-        <div className="vpaa-cover vpaa-category-thesis-cover">
-          <div className="vpaa-cover-meta">Technological University of the Philippines</div>
-          <div className="vpaa-cover-meta">{item.department || item.category || 'Thesis Archive'}</div>
-        </div>
-
-        <div className="vpaa-category-thesis-body">
-          <h3>{truncateTitle(item.title)}</h3>
-          <p>{formatAuthorLine(item)}</p>
-          <div className="vpaa-category-tags">
-            {tags.map((tag) => (
-              <span className="vpaa-pill vpaa-category-tag" key={tag}>{tag}</span>
-            ))}
-          </div>
-        </div>
+        <ThesisArchiveCover
+          className="vpaa-category-thesis-cover"
+          compact
+          title={truncateTitle(item.title)}
+          college={item.college}
+          department={item.department}
+          author={formatAuthorLine(item)}
+          year={item.year}
+          categories={item.categories?.filter((category) => Boolean(category?.name)).length
+            ? item.categories.filter((category): category is { id: string; name: string; slug: string } => Boolean(category?.name))
+            : tags.map((tag, index) => ({ id: `${item.id}-${index}`, name: String(tag) }))}
+        />
       </Link>
     );
   };
 
   const renderRecentlyAddedCard = (item: FacultyDashboardThesis) => {
-    const tags = (item.keywords?.length ? item.keywords : [item.category, item.department]).filter(Boolean).slice(0, 2);
-
     return (
       <Link
         className="recent-added-card"
@@ -108,20 +105,21 @@ export default function FacultyDashboard() {
         to={thesisHref(item)}
         state={{ thesis: item }}
       >
-        <div className="recent-added-card-cover">
-          <div className="recent-added-card-cover-meta">TECHNOLOGICAL UNIVERSITY OF THE PHILIPPINES</div>
-          <div className="recent-added-card-cover-meta">{item.department || item.category || 'THESIS ARCHIVE'}</div>
-        </div>
-
-        <div className="recent-added-card-body">
-          <h4>{truncateTitle(item.title)}</h4>
-          <p>{formatAuthorLine(item)}</p>
-          <div className="recent-added-card-tags">
-            {tags.map((tag) => (
-              <span className="recent-added-card-tag" key={tag}>{tag}</span>
-            ))}
-          </div>
-        </div>
+        <ThesisArchiveCover
+          className="recent-added-card-cover"
+          compact
+          title={truncateTitle(item.title)}
+          college={item.college}
+          department={item.department}
+          author={formatAuthorLine(item)}
+          year={item.year}
+          categories={item.categories?.filter((category) => Boolean(category?.name)).length
+            ? item.categories.filter((category): category is { id: string; name: string; slug: string } => Boolean(category?.name))
+            : [item.category, item.department]
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((tag, index) => ({ id: `${item.id}-${index}`, name: String(tag) }))}
+        />
       </Link>
     );
   };

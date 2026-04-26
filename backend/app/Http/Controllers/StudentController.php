@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use App\Models\Category;
 use App\Models\FacultyProfile;
 use App\Models\SearchLog;
 use App\Models\StudentProfile;
@@ -145,6 +146,8 @@ class StudentController extends Controller
 
     private function formatDashboardThesis(Thesis $thesis): array
     {
+        $categories = $this->resolveCategorySummaries($thesis);
+
         return [
             'id' => $thesis->id,
             'title' => $thesis->title,
@@ -153,14 +156,62 @@ class StudentController extends Controller
             'abstract' => $thesis->abstract,
             'submitter_name' => $thesis->submitter?->name,
             'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
+            'college' => $this->resolveCollegeForDepartment($thesis->department),
             'department' => $thesis->department,
             'program' => $thesis->program,
-            'category' => $thesis->category?->name,
+            'category' => $categories[0]['name'] ?? $thesis->category?->name,
+            'categories' => $categories,
             'keywords' => collect($thesis->keywords ?? [])->filter()->values()->all(),
             'view_count' => (int) $thesis->view_count,
             'approved_at' => $this->formatIsoTimestamp($thesis->approved_at),
             'created_at' => $this->formatIsoTimestamp($thesis->created_at),
         ];
+    }
+
+    private function resolveCollegeForDepartment(?string $department): ?string
+    {
+        $normalizedDepartment = trim((string) $department);
+
+        if ($normalizedDepartment === '') {
+            return null;
+        }
+
+        $departmentCollegeMap = config('academic.department_college_map', []);
+
+        return isset($departmentCollegeMap[$normalizedDepartment])
+            ? trim((string) $departmentCollegeMap[$normalizedDepartment])
+            : null;
+    }
+
+    private function resolveCategorySummaries(Thesis $thesis): array
+    {
+        $categoryIds = collect($thesis->category_ids ?? [])
+            ->filter(fn ($id) => is_string($id) && trim($id) !== '')
+            ->values();
+
+        if ($categoryIds->isEmpty() && $thesis->category_id) {
+            $categoryIds = collect([$thesis->category_id]);
+        }
+
+        if ($categoryIds->isEmpty()) {
+            return [];
+        }
+
+        $categories = Category::query()
+            ->whereIn('id', $categoryIds)
+            ->get(['id', 'name', 'slug'])
+            ->keyBy('id');
+
+        return $categoryIds
+            ->map(fn (string $id) => $categories->get($id))
+            ->filter()
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+            ])
+            ->values()
+            ->all();
     }
 
     private function resolveTopSearches()

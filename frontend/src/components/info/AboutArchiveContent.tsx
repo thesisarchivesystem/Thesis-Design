@@ -1,75 +1,196 @@
-import { BookOpenText, Database, FolderKanban, ShieldCheck, Sparkles, Waypoints } from 'lucide-react';
+import {
+  BadgeCheck,
+  BarChart3,
+  BookOpenText,
+  ClipboardCheck,
+  Database,
+  Files,
+  FolderKanban,
+  Library,
+  Lock,
+  Search,
+} from 'lucide-react';
 
-const pillars = [
+const featureCards = [
   {
-    title: 'Purpose',
-    copy: 'Provide a trusted repository where theses are preserved, discoverable, and categorized by department, year, and keywords.',
-    icon: <BookOpenText size={20} />,
-    tone: 'si-maroon',
+    title: 'Organized repository',
+    copy: 'Theses are categorized by department, submission year, and keywords so records stay easy to find and manage.',
+    icon: <BookOpenText size={18} />,
   },
   {
-    title: 'How It Works',
-    copy: 'Students submit their work, advisers and panels validate it, and the library team archives the final copy for campus access.',
-    icon: <ShieldCheck size={20} />,
-    tone: 'si-sage',
+    title: 'Security & integrity',
+    copy: 'Access controls, verified ownership, and revision tracking protect submissions and preserve metadata accuracy.',
+    icon: <Lock size={18} />,
   },
   {
-    title: 'Who It Serves',
-    copy: 'Students looking for references, advisers reviewing progress, and librarians maintaining the university research legacy.',
-    icon: <FolderKanban size={20} />,
-    tone: 'si-sky',
+    title: 'Advanced search',
+    copy: 'Users can quickly locate related studies through filters, searchable metadata, and indexed archive records.',
+    icon: <Search size={18} />,
   },
   {
-    title: 'Data Stewardship',
-    copy: 'Version history, permissions, and secure storage ensure that every document stays intact and traceable over time.',
-    icon: <Database size={20} />,
-    tone: 'si-terracotta',
+    title: 'Research impact',
+    copy: 'Students build stronger proposals by referencing prior work and avoiding repeated topics across batches.',
+    icon: <BarChart3 size={18} />,
   },
   {
-    title: 'Discovery',
-    copy: 'Advanced search, tags, and category views help students find relevant studies across disciplines quickly.',
-    icon: <Waypoints size={20} />,
-    tone: 'si-gold',
+    title: 'Submission tracking',
+    copy: 'Each thesis moves through draft, review, revision, and archive stages with a clear activity trail.',
+    icon: <Files size={18} />,
   },
   {
-    title: 'Impact',
-    copy: 'By reusing prior research, students build stronger proposals and prevent duplicated work across batches.',
-    icon: <Sparkles size={20} />,
-    tone: 'si-maroon',
+    title: 'Activity & audit logs',
+    copy: 'Important actions such as uploads, revisions, and approvals remain visible for accountability and follow-up.',
+    icon: <ClipboardCheck size={18} />,
+  },
+];
+
+const workflowSteps = [
+  'Student submits draft',
+  'Adviser reviews & comments',
+  'Panel validates thesis',
+  'Library archives final copy',
+  'Published to archive',
+];
+
+const userGroups = [
+  {
+    code: 'ST',
+    title: 'Students',
+    copy: 'Submit drafts, track revision status, explore prior research, and access archived studies for reference.',
+    tone: 'student',
+  },
+  {
+    code: 'FA',
+    title: 'Faculty & Advisers',
+    copy: 'Review submissions, provide revision feedback, and monitor thesis progress from proposal through defense.',
+    tone: 'faculty',
+  },
+  {
+    code: 'LB',
+    title: 'Librarians',
+    copy: 'Manage the archival process, ensure metadata quality, and preserve the institution’s research collection.',
+    tone: 'library',
+  },
+];
+
+const faqItems = [
+  {
+    question: 'Who can access archived theses?',
+    answer: 'Approved archive records are available to authenticated campus users, while drafts and review notes stay limited to the author and assigned reviewers.',
+  },
+  {
+    question: 'Can I edit my thesis after submitting?',
+    answer: 'Revisions are allowed while a thesis is still under review. Once archived, the final record is preserved as part of the university repository.',
+  },
+  {
+    question: 'How long are theses kept in the archive?',
+    answer: 'Approved theses are stored as long-term institutional records so future students and faculty can continue learning from them.',
+  },
+  {
+    question: 'How do I report an issue with a submission?',
+    answer: 'Use the Support section in the system or coordinate with your department office or library team for submission concerns.',
   },
 ];
 
 export default function AboutArchiveContent() {
   return (
-    <>
-      <section className="vpaa-page-hero vpaa-page-hero-about">
-        <div className="vpaa-about-hero-copy">
-          <h2>About the Thesis Archive</h2>
+    <div className="vpaa-about-reference-layout">
+
+      <section className="vpaa-about-reference-hero">
+        <article className="vpaa-about-reference-story">
+          <span className="vpaa-about-reference-label">University Research Repository</span>
+          <h3>A digital home for every thesis your institution creates</h3>
           <p>
-            The Thesis Archive Management System is a curated digital library for student research. It keeps every
-            approved thesis organized, searchable, and ready for future study. Built for students, advisers, and
-            librarians, it streamlines submission, review, and preservation from proposal to final archive.
+            The Thesis Archive is the university&apos;s central repository for student research. Every approved thesis is
+            stored, organized, and made fully searchable so the first proposal to the final archived copy remains easy
+            to trace, preserve, and learn from.
           </p>
-        </div>
-        <div className="vpaa-page-hero-panel">
-          <h3>What We Protect</h3>
-          <ul className="vpaa-dot-list">
-            <li><span />Verified authorship and academic integrity</li>
-            <li><span />Complete submission history with revisions</li>
-            <li><span />Long-term access to institutional research</li>
+          <div className="vpaa-about-reference-tags" aria-label="Supported user groups">
+            <span>Students</span>
+            <span>Faculty &amp; Advisers</span>
+            <span>Librarians</span>
+          </div>
+        </article>
+
+        <aside className="vpaa-about-reference-protect">
+          <span className="vpaa-about-reference-label">What We Protect</span>
+          <ul>
+            <li><BadgeCheck size={14} /> Verified authorship and academic integrity</li>
+            <li><Database size={14} /> Complete submission history with revisions</li>
+            <li><Library size={14} /> Long-term access to institutional research</li>
+            <li><FolderKanban size={14} /> Duplicated and plagiarized submissions</li>
           </ul>
+          <div className="vpaa-about-reference-callout">
+            <strong>Permanent retention</strong>
+            <p>Archived records remain part of the university&apos;s academic memory.</p>
+          </div>
+        </aside>
+      </section>
+
+      <section className="vpaa-about-reference-workflow">
+        <div className="vpaa-about-reference-workflow-head">
+          <span className="vpaa-about-reference-label">Workflow</span>
+          <h3>How a thesis moves through the system</h3>
+        </div>
+        <div className="vpaa-about-reference-steps">
+          {workflowSteps.map((step, index) => (
+            <article className="vpaa-about-reference-step" key={step}>
+              <span>{index + 1}</span>
+              <p>{step}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="vpaa-page-card-grid">
-        {pillars.map((item) => (
-          <article className="vpaa-page-feature-card" key={item.title}>
-            <div className={`vpaa-stat-icon ${item.tone}`}>{item.icon}</div>
-            <h3>{item.title}</h3>
-            <p>{item.copy}</p>
-          </article>
-        ))}
+      <section className="vpaa-about-reference-section">
+        <div className="vpaa-about-reference-section-head">
+          <span className="vpaa-about-reference-label">Core Features</span>
+        </div>
+        <div className="vpaa-about-reference-feature-grid">
+          {featureCards.map((item) => (
+            <article className="vpaa-about-reference-feature-card" key={item.title}>
+              <div className="vpaa-about-reference-icon">{item.icon}</div>
+              <h3>{item.title}</h3>
+              <p>{item.copy}</p>
+            </article>
+          ))}
+        </div>
       </section>
-    </>
+
+      <section className="vpaa-about-reference-bottom-grid">
+        <article className="vpaa-about-reference-panel">
+          <div className="vpaa-about-reference-section-head">
+            <span className="vpaa-about-reference-label">Users</span>
+            <h3>Who uses this system</h3>
+          </div>
+          <div className="vpaa-about-reference-user-list">
+            {userGroups.map((group) => (
+              <div className="vpaa-about-reference-user-item" key={group.title}>
+                <span className={`vpaa-about-reference-user-badge ${group.tone}`}>{group.code}</span>
+                <div>
+                  <strong>{group.title}</strong>
+                  <p>{group.copy}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="vpaa-about-reference-panel">
+          <div className="vpaa-about-reference-section-head">
+            <span className="vpaa-about-reference-label">FAQ</span>
+            <h3>Frequently asked questions</h3>
+          </div>
+          <div className="vpaa-about-reference-faq-list">
+            {faqItems.map((item) => (
+              <div className="vpaa-about-reference-faq-item" key={item.question}>
+                <strong>{item.question}</strong>
+                <p>{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+    </div>
   );
 }

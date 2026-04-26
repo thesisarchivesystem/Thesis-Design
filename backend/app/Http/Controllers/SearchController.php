@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SearchLog;
+use App\Models\Category;
 use App\Models\SharedFile;
 use App\Models\Thesis;
 use App\Models\User;
@@ -44,7 +45,7 @@ class SearchController extends Controller
 
         return response()->json([
             'results' => [
-                'theses' => $theses,
+                'theses' => $theses->map(fn (Thesis $thesis) => $this->transformSearchThesis($thesis))->values(),
                 'users' => $users,
             ],
         ]);
@@ -198,5 +199,79 @@ class SearchController extends Controller
                 ];
             })->all()
         );
+    }
+
+    private function transformSearchThesis(Thesis $thesis): array
+    {
+        $categories = $this->resolveCategorySummaries($thesis);
+
+        return [
+            'id' => $thesis->id,
+            'title' => $thesis->title,
+            'college' => $this->resolveCollegeForDepartment($thesis->department),
+            'department' => $thesis->department,
+            'program' => $thesis->program,
+            'authors' => collect($thesis->authors ?? [])->filter()->values()->all(),
+            'author' => collect($thesis->authors ?? [])->filter()->implode(', ') ?: ($thesis->submitter?->name ?? 'Unknown author'),
+            'year' => $thesis->approved_at?->format('Y') ?? ($thesis->created_at?->format('Y') ?? null),
+            'keywords' => collect($thesis->keywords ?? [])->filter()->values()->all(),
+            'created_at' => optional($thesis->created_at)?->toISOString(),
+            'submitter' => $thesis->submitter ? [
+                'id' => $thesis->submitter->id,
+                'name' => $thesis->submitter->name,
+            ] : null,
+            'category' => $categories[0] ?? ($thesis->category ? [
+                'id' => $thesis->category->id,
+                'name' => $thesis->category->name,
+                'slug' => $thesis->category->slug,
+            ] : null),
+            'categories' => $categories,
+        ];
+    }
+
+    private function resolveCollegeForDepartment(?string $department): ?string
+    {
+        $normalizedDepartment = trim((string) $department);
+
+        if ($normalizedDepartment === '') {
+            return null;
+        }
+
+        $departmentCollegeMap = config('academic.department_college_map', []);
+
+        return isset($departmentCollegeMap[$normalizedDepartment])
+            ? trim((string) $departmentCollegeMap[$normalizedDepartment])
+            : null;
+    }
+
+    private function resolveCategorySummaries(Thesis $thesis): array
+    {
+        $categoryIds = collect($thesis->category_ids ?? [])
+            ->filter(fn ($id) => is_string($id) && trim($id) !== '')
+            ->values();
+
+        if ($categoryIds->isEmpty() && $thesis->category_id) {
+            $categoryIds = collect([$thesis->category_id]);
+        }
+
+        if ($categoryIds->isEmpty()) {
+            return [];
+        }
+
+        $categories = Category::query()
+            ->whereIn('id', $categoryIds)
+            ->get(['id', 'name', 'slug'])
+            ->keyBy('id');
+
+        return $categoryIds
+            ->map(fn (string $id) => $categories->get($id))
+            ->filter()
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+            ])
+            ->values()
+            ->all();
     }
 }
