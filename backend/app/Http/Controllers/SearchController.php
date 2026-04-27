@@ -28,6 +28,7 @@ class SearchController extends Controller
             [$q]
         )
         ->where('status', 'approved')
+        ->where('is_archived', true)
         ->orderByRaw(
             "ts_rank(
                to_tsvector('english', {$searchDocument}),

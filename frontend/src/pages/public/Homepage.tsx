@@ -17,10 +17,10 @@ const sections = [
 ] as const;
 
 const stats = [
-  { value: '500+', label: 'Thesis Documents' },
+  { value: '200+', label: 'Thesis Documents' },
   { value: '3', label: 'Programs' },
-  { value: '10+', label: 'Years of Research' },
-  { value: '200+', label: 'Research Groups' },
+  { value: '25+', label: 'Student Authors' },
+  { value: '95%', label: 'Completion Rate' },
 ];
 
 const features = [
