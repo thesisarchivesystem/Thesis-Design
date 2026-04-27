@@ -535,22 +535,8 @@ export default function FacultyAdviseesPage() {
                       <input value={editForm.last_name} onChange={(event) => setEditForm({ ...editForm, last_name: event.target.value })} placeholder="Dela Cruz" required />
                     </label>
                     <label className="form-field">
-                      Temporary Password
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
-                        <input
-                          type="text"
-                          value={editForm.temporary_password}
-                          onChange={(event) => setEditForm({ ...editForm, temporary_password: event.target.value })}
-                          placeholder="Leave blank to keep the current password"
-                        />
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          onClick={() => setEditForm({ ...editForm, temporary_password: generateTemporaryPassword() })}
-                        >
-                          Generate
-                        </button>
-                      </div>
+                      Suffix
+                      <input value={editForm.suffix ?? ''} onChange={(event) => setEditForm({ ...editForm, suffix: event.target.value })} placeholder="Jr." />
                     </label>
                     <label className="form-field">
                       Year Level
@@ -568,6 +554,24 @@ export default function FacultyAdviseesPage() {
                     <label className="form-field">
                       Department
                       <input value={editForm.department} onChange={(event) => setEditForm({ ...editForm, department: event.target.value })} required />
+                    </label>
+                    <label className="form-field">
+                      Temporary Password
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
+                        <input
+                          type="text"
+                          value={editForm.temporary_password}
+                          onChange={(event) => setEditForm({ ...editForm, temporary_password: event.target.value })}
+                          placeholder="Leave blank to keep the current password"
+                        />
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setEditForm({ ...editForm, temporary_password: generateTemporaryPassword() })}
+                        >
+                          Generate
+                        </button>
+                      </div>
                     </label>
                     {selectedAdvisee ? (
                       <div className="form-field faculty-advisee-delete-field">
