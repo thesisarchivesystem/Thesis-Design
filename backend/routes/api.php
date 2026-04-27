@@ -82,10 +82,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/theses/{id}', [FacultyController::class, 'destroyManagedThesis']);
         Route::apiResource('students', StudentController::class);
         Route::get('/thesis-submissions', [ThesisController::class, 'pendingReview']);
+        Route::get('/thesis-review-stats', [ThesisController::class, 'reviewStats']);
         Route::patch('/thesis/{id}/review', [ThesisController::class, 'review']);
         Route::get('/approved-thesis', [ThesisController::class, 'approved']);
         Route::patch('/approved-thesis/{id}/archive', [ThesisController::class, 'archiveApproved']);
         Route::get('/extension-requests', [ExtensionRequestController::class, 'indexForFaculty']);
+        Route::get('/extension-requests/{id}', [ExtensionRequestController::class, 'showForFaculty']);
+        Route::patch('/extension-requests/{id}', [ExtensionRequestController::class, 'decide']);
     });
 
     // ── Student ────────────────────────────────────────────

@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import FacultyLayout from '../../components/faculty/FacultyLayout';
 import { thesisService } from '../../services/thesisService';
 import { extensionRequestService } from '../../services/extensionRequestService';
-import { facultyDashboardService } from '../../services/facultyDashboardService';
 import type { Thesis } from '../../types/thesis.types';
 import type { FacultyExtensionRequest } from '../../types/faculty-extension-request.types';
 
@@ -22,6 +21,8 @@ const getProgramLabel = (program?: string | null) => {
 };
 
 export default function FacultyReviewSubmissionsPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [submissions, setSubmissions] = useState<Thesis[]>([]);
   const [extensionRequests, setExtensionRequests] = useState<FacultyExtensionRequest[]>([]);
   const [dashboardStats, setDashboardStats] = useState({
@@ -32,30 +33,37 @@ export default function FacultyReviewSubmissionsPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [programFilter, setProgramFilter] = useState('All Programs');
   const [statusFilter, setStatusFilter] = useState('All Status');
-  const navigate = useNavigate();
-  const location = useLocation();
   const highlightedExtensionRequestId = (location.state as { extensionRequestId?: string } | null)?.extensionRequestId ?? '';
+  const successMessage = (location.state as { successMessage?: string } | null)?.successMessage ?? '';
+
+  useEffect(() => {
+    if (!successMessage) return;
+
+    setSuccess(successMessage);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, navigate, successMessage]);
 
   useEffect(() => {
     let isMounted = true;
 
     void Promise.all([
       thesisService.pendingReview(),
+      thesisService.reviewStats(),
       extensionRequestService.listForFaculty(),
-      facultyDashboardService.getDashboard(),
     ])
-      .then(([submissionsResponse, extensionResponse, dashboardResponse]) => {
+      .then(([submissionsResponse, reviewStats, extensionResponse]) => {
         if (!isMounted) return;
         setSubmissions(submissionsResponse.data ?? []);
         setExtensionRequests(extensionResponse.data ?? []);
         setDashboardStats({
-          total_submissions: dashboardResponse.stats?.total_submissions ?? 0,
-          approved_thesis: dashboardResponse.stats?.approved_thesis ?? 0,
-          pending_reviews: dashboardResponse.stats?.pending_reviews ?? 0,
-          rejected_thesis: dashboardResponse.stats?.rejected_thesis ?? 0,
+          total_submissions: reviewStats.total_submissions ?? 0,
+          approved_thesis: reviewStats.approved_thesis ?? 0,
+          pending_reviews: reviewStats.pending_reviews ?? 0,
+          rejected_thesis: reviewStats.rejected_thesis ?? 0,
         });
       })
       .catch(() => {
@@ -108,6 +116,7 @@ export default function FacultyReviewSubmissionsPage() {
       description="Student thesis uploads awaiting faculty review and approval."
     >
       <div className="space-y-5">
+        {success ? <div className="rounded-xl bg-[rgba(61,139,74,0.10)] px-4 py-3 text-sm font-medium text-[var(--sage)]">{success}</div> : null}
         {error ? <div className="rounded-xl bg-[rgba(139,35,50,0.08)] px-4 py-3 text-sm font-medium text-[var(--maroon)]">{error}</div> : null}
 
         <section className="student-submissions-stats">
@@ -254,18 +263,19 @@ export default function FacultyReviewSubmissionsPage() {
                   <th>Requested Deadline</th>
                   <th>Reason</th>
                   <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="text-center text-text-secondary">Loading extension requests...</td>
+                    <td colSpan={6} className="text-center text-text-secondary">Loading extension requests...</td>
                   </tr>
                 ) : null}
 
                 {!isLoading && !extensionRequests.length ? (
                   <tr>
-                    <td colSpan={5} className="text-center text-text-secondary">No extension requests yet.</td>
+                    <td colSpan={6} className="text-center text-text-secondary">No extension requests yet.</td>
                   </tr>
                 ) : null}
 
@@ -279,6 +289,17 @@ export default function FacultyReviewSubmissionsPage() {
                       <span className="rounded-xl bg-[rgba(196,101,74,0.08)] px-3 py-1 text-xs font-semibold text-[var(--terracotta)]">
                         {request.status}
                       </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="rounded-xl bg-[var(--maroon)] px-4 py-2 text-sm font-semibold text-white"
+                        onClick={() => navigate(`/faculty/manage-thesis/extension-requests/${request.id}`, {
+                          state: { extensionRequest: request },
+                        })}
+                      >
+                        View Request
+                      </button>
                     </td>
                   </tr>
                 ))}

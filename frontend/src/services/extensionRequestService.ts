@@ -1,5 +1,6 @@
 import api from './api';
 import type { ExtensionRequest } from '../types/extension-request.types';
+import type { FacultyExtensionRequest } from '../types/faculty-extension-request.types';
 
 export interface CreateExtensionRequestPayload {
   thesis_id: string;
@@ -14,7 +15,17 @@ export const extensionRequestService = {
   },
 
   async listForFaculty() {
-    const { data } = await api.get<{ data?: ExtensionRequest[] }>('/faculty/extension-requests');
+    const { data } = await api.get<{ data?: FacultyExtensionRequest[] }>('/faculty/extension-requests');
+    return data;
+  },
+
+  async getForFaculty(id: string) {
+    const { data } = await api.get<{ data?: FacultyExtensionRequest }>(`/faculty/extension-requests/${id}`);
+    return data.data ?? null;
+  },
+
+  async decide(id: string, status: 'approved' | 'rejected') {
+    const { data } = await api.patch<{ data?: FacultyExtensionRequest; message?: string }>(`/faculty/extension-requests/${id}`, { status });
     return data;
   },
 };

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CalendarDays, FileBadge2, FileText, FolderOpen, GraduationCap, UserRound } from 'lucide-react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import FacultyLayout from '../../components/faculty/FacultyLayout';
 import { thesisService } from '../../services/thesisService';
 import type { Thesis } from '../../types/thesis.types';
@@ -40,6 +40,7 @@ type LocationState = {
 export default function FacultySubmissionDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const locationState = location.state as LocationState | null;
   const [submission, setSubmission] = useState<Thesis | null>(locationState?.submission ?? null);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,12 +164,23 @@ export default function FacultySubmissionDetailsPage() {
         status === 'rejected' ? revisionDueAt : undefined,
       );
 
-      const refreshed = await thesisService.get(submission.id);
-      const updatedSubmission = refreshed?.data ?? refreshed;
-      setSubmission(updatedSubmission ?? null);
-      setReviewComment(updatedSubmission?.adviser_remarks ?? updatedSubmission?.rejection_reason ?? trimmedComment);
-      setRevisionDueAt(updatedSubmission?.revision_due_at ?? '');
-      setSuccess(status === 'approved' ? 'Submission approved successfully.' : 'Submission marked for revision successfully.');
+      if (status === 'approved') {
+        navigate('/faculty/manage-thesis/approved', {
+          replace: true,
+          state: {
+            successMessage: 'Submission approved successfully.',
+          },
+        });
+        return;
+      }
+
+      navigate('/faculty/manage-thesis/review', {
+        replace: true,
+        state: {
+          successMessage: 'Submission marked for revision successfully.',
+        },
+      });
+      return;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to submit the review right now.');
     } finally {

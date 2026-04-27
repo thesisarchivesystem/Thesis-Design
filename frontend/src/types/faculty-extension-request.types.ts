@@ -5,12 +5,13 @@ export interface FacultyExtensionRequest {
   faculty_id: string;
   requested_deadline: string;
   reason: string;
-  status: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   thesis?: {
     id: string;
     title: string;
     status: string;
+    revision_due_at?: string | null;
   };
   student?: {
     id: string;

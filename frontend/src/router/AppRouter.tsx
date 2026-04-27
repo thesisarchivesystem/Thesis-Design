@@ -35,6 +35,7 @@ import FacultyMyThesesPage from '../pages/faculty/FacultyMyThesesPage';
 import FacultyApprovedThesesPage from '../pages/faculty/FacultyApprovedThesesPage';
 import FacultyReviewSubmissionsPage from '../pages/faculty/FacultyReviewSubmissionsPage';
 import FacultySubmissionDetailsPage from '../pages/faculty/FacultySubmissionDetailsPage';
+import FacultyExtensionRequestDetailsPage from '../pages/faculty/FacultyExtensionRequestDetailsPage';
 import FacultySearchResultsPage from '../pages/faculty/FacultySearchResultsPage';
 import FacultyActivityLogPage from '../pages/faculty/FacultyActivityLogPage';
 import FacultyAdviseesPage from '../pages/faculty/FacultyAdviseesPage';
@@ -150,6 +151,7 @@ export default function AppRouter() {
           <Route path="manage-thesis/approved" element={<FacultyApprovedThesesPage />} />
           <Route path="manage-thesis/review" element={<FacultyReviewSubmissionsPage />} />
           <Route path="manage-thesis/review/:id" element={<FacultySubmissionDetailsPage />} />
+          <Route path="manage-thesis/extension-requests/:id" element={<FacultyExtensionRequestDetailsPage />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
 
