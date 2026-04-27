@@ -30,6 +30,7 @@ class ThesisController extends Controller
     public function index(): JsonResponse
     {
         $theses = Thesis::where('status', 'approved')
+            ->where('is_archived', true)
             ->with('submitter:id,name', 'category:id,name,slug')
             ->orderByDesc('approved_at')
             ->paginate(20);
@@ -110,12 +111,15 @@ class ThesisController extends Controller
         $thesis = Thesis::with('submitter:id,name', 'adviser:id,name', 'category:id,name,slug')->findOrFail($id);
         $user = auth()->user();
 
-        if ($thesis->status !== 'approved' && (!$user || ($user->id !== $thesis->submitted_by && $user->id !== $thesis->adviser_id && $user->role !== 'vpaa'))) {
+        $canAccessUnarchivedApproved = $user
+            && ($user->id === $thesis->submitted_by || $user->id === $thesis->adviser_id || $user->role === 'vpaa');
+
+        if (($thesis->status !== 'approved' || !$thesis->is_archived) && !$canAccessUnarchivedApproved) {
             return response()->json(['error' => 'You are not allowed to access this thesis.'], 403);
         }
 
         // Track view if authenticated as student
-        if (auth()->check() && auth()->user()->role === 'student' && $thesis->status === 'approved') {
+        if (auth()->check() && auth()->user()->role === 'student' && $thesis->status === 'approved' && $thesis->is_archived) {
             RecentlyViewed::updateOrCreate(
                 ['user_id' => auth()->id(), 'thesis_id' => $thesis->id],
                 ['viewed_at' => now()]
@@ -123,7 +127,7 @@ class ThesisController extends Controller
         }
 
         // Increment view count
-        if ($thesis->status === 'approved') {
+        if ($thesis->status === 'approved' && $thesis->is_archived) {
             $thesis->increment('view_count');
         }
 
@@ -535,10 +539,10 @@ class ThesisController extends Controller
         $categories = Category::query()
             ->whereRaw('is_active = true')
             ->withCount(['theses as document_count' => function ($query) {
-                $query->where('status', 'approved');
+                $query->where('status', 'approved')->where('is_archived', true);
             }])
             ->withMax(['theses as latest_approved_at' => function ($query) {
-                $query->where('status', 'approved');
+                $query->where('status', 'approved')->where('is_archived', true);
             }], 'approved_at')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -564,6 +568,7 @@ class ThesisController extends Controller
                 ->with('submitter:id,name')
                 ->whereIn('category_id', $categoryIds)
                 ->where('status', 'approved')
+                ->where('is_archived', true)
                 ->orderBy('category_id')
                 ->orderByDesc('approved_at')
                 ->get()

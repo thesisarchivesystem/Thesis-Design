@@ -70,6 +70,16 @@ export default function FacultyApprovedThesesPage() {
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, navigate, successMessage]);
 
+  useEffect(() => {
+    if (!success) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      setSuccess('');
+    }, 5000);
+
+    return () => window.clearTimeout(timeout);
+  }, [success]);
+
   const handleOpenManuscript = async (thesis: Thesis) => {
     const previewWindow = window.open('', '_blank');
 
@@ -111,11 +121,9 @@ export default function FacultyApprovedThesesPage() {
     setSuccess('');
 
     try {
-      const response = await thesisService.archiveApproved(thesis.id);
-      const updated = response.data;
-
-      setTheses((current) => current.map((item) => (item.id === thesis.id ? { ...item, ...updated } : item)));
-      setSuccess('Thesis archived successfully. It is now visible in the public archive.');
+      await thesisService.archiveApproved(thesis.id);
+      setTheses((current) => current.filter((item) => item.id !== thesis.id));
+      setSuccess('Thesis archived successfully.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to archive this thesis right now.');
     } finally {

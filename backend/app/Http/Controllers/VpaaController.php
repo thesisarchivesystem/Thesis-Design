@@ -87,6 +87,7 @@ class VpaaController extends Controller
 
         $recentTheses = Thesis::query()
             ->where('status', 'approved')
+            ->where('is_archived', true)
             ->with(['submitter:id,name', 'category:id,name'])
             ->orderByDesc('approved_at')
             ->orderByDesc('created_at')
@@ -195,6 +196,7 @@ class VpaaController extends Controller
 
         $theses = Thesis::query()
             ->where('status', 'approved')
+            ->where('is_archived', true)
             ->whereIn('id', $topThesisIds)
             ->with(['submitter:id,name', 'category:id,name'])
             ->get()
@@ -374,10 +376,10 @@ class VpaaController extends Controller
         $categories = Category::query()
             ->whereRaw('is_active = true')
             ->withCount(['theses as document_count' => function ($query) {
-                $query->where('status', 'approved');
+                $query->where('status', 'approved')->where('is_archived', true);
             }])
             ->withMax(['theses as latest_approved_at' => function ($query) {
-                $query->where('status', 'approved');
+                $query->where('status', 'approved')->where('is_archived', true);
             }], 'approved_at')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -387,6 +389,7 @@ class VpaaController extends Controller
                 $theses = Thesis::query()
                     ->where('category_id', $category->id)
                     ->where('status', 'approved')
+                    ->where('is_archived', true)
                     ->select([
                         'id',
                         'title',
