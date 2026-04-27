@@ -14,6 +14,7 @@ const generateTemporaryPassword = () => {
 const EDIT_PANEL_CLOSE_DELAY = 280;
 const EDIT_PANEL_SHELL_CLOSE_DELAY = 180;
 const NEW_ACCOUNT_WINDOW_DAYS = 3;
+const SUCCESS_MESSAGE_DISMISS_DELAY = 4200;
 
 const initialForm: FacultyAccountPayload = {
   first_name: '',
@@ -87,8 +88,12 @@ export default function VpaaAdviseesPage() {
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editShellOpen, setEditShellOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const editPanelRef = useRef<HTMLDivElement | null>(null);
   const editCloseTimeoutRef = useRef<number | null>(null);
+  const successTimeoutRef = useRef<number | null>(null);
+  const successBannerRef = useRef<HTMLDivElement | null>(null);
 
   const loadFaculty = async () => {
     try {
@@ -107,7 +112,26 @@ export default function VpaaAdviseesPage() {
     if (editCloseTimeoutRef.current) {
       window.clearTimeout(editCloseTimeoutRef.current);
     }
+    if (successTimeoutRef.current) {
+      window.clearTimeout(successTimeoutRef.current);
+    }
   }, []);
+
+  const showTransientSuccess = (message: string) => {
+    if (successTimeoutRef.current) {
+      window.clearTimeout(successTimeoutRef.current);
+    }
+
+    setSuccess(message);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      successBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    successTimeoutRef.current = window.setTimeout(() => {
+      setSuccess('');
+      successTimeoutRef.current = null;
+    }, SUCCESS_MESSAGE_DISMISS_DELAY);
+  };
 
   useEffect(() => {
     if (!editingId || !editOpen) return;
@@ -210,6 +234,8 @@ export default function VpaaAdviseesPage() {
     [faculty, quickFilter, roleFilter, search],
   );
 
+  const selectedFaculty = editingId ? faculty.find((member) => member.id === editingId) ?? null : null;
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
@@ -242,6 +268,7 @@ export default function VpaaAdviseesPage() {
 
     setEditError('');
     setEditSuccess('');
+    setEditSaving(true);
 
     try {
       await facultyManagementService.updateFacultyAccount(editingId, {
@@ -264,6 +291,33 @@ export default function VpaaAdviseesPage() {
       }, 1400);
     } catch (err: any) {
       setEditError(err.response?.data?.message || 'Unable to update the faculty account.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleRemoveFaculty = async (member: FacultyProfile) => {
+    const confirmed = window.confirm(
+      `Delete ${member.user.name}'s faculty account?\n\nTheir account will be removed, and any thesis records already added to the archive will stay stored.`,
+    );
+
+    if (!confirmed) return;
+
+    setError('');
+    setSuccess('');
+    setRemovingId(member.id);
+
+    try {
+      await facultyManagementService.removeFacultyAccount(member.id);
+      if (editingId === member.id) {
+        resetEditForm();
+      }
+      showTransientSuccess(`${member.user.name}'s faculty account was deleted. Thesis records remain preserved.`);
+      await loadFaculty();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Unable to delete this faculty account right now.');
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -288,6 +342,12 @@ export default function VpaaAdviseesPage() {
         ))}
       </div>
 
+      {success ? (
+        <div ref={successBannerRef} className="vpaa-banner-success" style={{ marginBottom: 16 }}>
+          {success}
+        </div>
+      ) : null}
+
       <div className="review-panel">
         <div className="ra-header">
           <button type="button" className="vpaa-panel-toggle" onClick={() => setCreateOpen((current) => !current)} aria-expanded={createOpen}>
@@ -304,7 +364,6 @@ export default function VpaaAdviseesPage() {
         <div className={`vpaa-collapsible${createOpen ? ' open' : ''}`}>
           <div className="vpaa-collapsible-body">
             {error ? <div className="vpaa-banner-error">{error}</div> : null}
-            {success ? <div className="vpaa-banner-success">{success}</div> : null}
 
             <form onSubmit={handleSubmit}>
                 <div className="form-grid">
@@ -471,7 +530,7 @@ export default function VpaaAdviseesPage() {
                       <td>{member.faculty_role === 'Dean' ? 'Admin' : member.status === 'inactive' ? 'Access Review' : 'Standard'}</td>
                       <td>{new Date(member.user.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</td>
                       <td><span className={`status-badge ${statusBadgeClass(member.status)}`}>{statusLabel(member.status)}</span></td>
-                      <td className="table-actions"><button type="button" className="btn-review" onClick={() => startEdit(member)}>{member.status === 'inactive' ? 'Review' : 'Edit'}</button></td>
+                      <td className="table-actions"><button type="button" className="btn-review" onClick={() => startEdit(member)} disabled={removingId === member.id}>{member.status === 'inactive' ? 'Review' : 'Edit'}</button></td>
                     </tr>
                   )) : (
                     <tr>
@@ -542,22 +601,8 @@ export default function VpaaAdviseesPage() {
                       <input value={editForm.last_name} onChange={(event) => setEditForm({ ...editForm, last_name: event.target.value })} placeholder="Dela Cruz" required />
                     </label>
                     <label className="form-field">
-                      Temporary Password
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
-                        <input
-                          type="text"
-                          value={editForm.temporary_password}
-                          onChange={(event) => setEditForm({ ...editForm, temporary_password: event.target.value })}
-                          placeholder="Leave blank to keep the current password"
-                        />
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          onClick={() => setEditForm({ ...editForm, temporary_password: generateTemporaryPassword() })}
-                        >
-                          Generate
-                        </button>
-                      </div>
+                      Suffix
+                      <input value={editForm.suffix ?? ''} onChange={(event) => setEditForm({ ...editForm, suffix: event.target.value })} placeholder="Jr." />
                     </label>
                     <label className="form-field">
                       Rank
@@ -596,11 +641,42 @@ export default function VpaaAdviseesPage() {
                         </select>
                       </label>
                     ) : null}
+                    <label className="form-field">
+                      Temporary Password
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
+                        <input
+                          type="text"
+                          value={editForm.temporary_password}
+                          onChange={(event) => setEditForm({ ...editForm, temporary_password: event.target.value })}
+                          placeholder="Leave blank to keep the current password"
+                        />
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setEditForm({ ...editForm, temporary_password: generateTemporaryPassword() })}
+                        >
+                          Generate
+                        </button>
+                      </div>
+                    </label>
+                    {selectedFaculty ? (
+                      <div className="form-field faculty-advisee-delete-field">
+                        <span>Delete Faculty Account</span>
+                        <button
+                          className="btn-review btn-review-danger faculty-advisee-delete-btn"
+                          type="button"
+                          onClick={() => handleRemoveFaculty(selectedFaculty)}
+                          disabled={editSaving || removingId === selectedFaculty.id}
+                        >
+                          {removingId === selectedFaculty.id ? 'Deleting...' : 'Delete Faculty'}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="form-actions">
                     <button className="btn-secondary" type="button" onClick={resetEditForm}>Cancel</button>
-                    <button className="btn-primary" type="submit">Save Changes</button>
+                    <button className="btn-primary" type="submit" disabled={editSaving}>{editSaving ? 'Saving...' : 'Save Changes'}</button>
                   </div>
                 </form>
               </div>

@@ -61,4 +61,8 @@ export const facultyManagementService = {
     const response = await api.patch<FacultyRecordResponse>(`/vpaa/faculty/${id}/status`, payload);
     return response.data.data;
   },
+
+  async removeFacultyAccount(id: string): Promise<void> {
+    await api.delete(`/vpaa/faculty/${id}`);
+  },
 };
