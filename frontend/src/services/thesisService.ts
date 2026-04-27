@@ -54,6 +54,13 @@ export interface StudentAdviserOption {
   rank?: string | null;
 }
 
+export interface FacultyReviewStats {
+  total_submissions: number;
+  approved_thesis: number;
+  pending_reviews: number;
+  rejected_thesis: number;
+}
+
 export const thesisService = {
   async list() {
     const { data } = await api.get('/thesis');
@@ -124,6 +131,16 @@ export const thesisService = {
   async pendingReview() {
     const { data } = await api.get('/faculty/thesis-submissions');
     return data;
+  },
+
+  async reviewStats() {
+    const { data } = await api.get<{ data?: FacultyReviewStats }>('/faculty/thesis-review-stats');
+    return data.data ?? {
+      total_submissions: 0,
+      approved_thesis: 0,
+      pending_reviews: 0,
+      rejected_thesis: 0,
+    };
   },
 
   async approved() {

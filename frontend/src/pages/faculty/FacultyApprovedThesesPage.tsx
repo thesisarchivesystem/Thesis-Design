@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Clock3, Files, LibraryBig } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import FacultyLayout from '../../components/faculty/FacultyLayout';
 import { thesisService } from '../../services/thesisService';
 import type { Thesis } from '../../types/thesis.types';
@@ -39,6 +40,8 @@ const getProgramBadge = (program?: string | null) => {
 };
 
 export default function FacultyApprovedThesesPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,6 +50,14 @@ export default function FacultyApprovedThesesPage() {
   const [programFilter, setProgramFilter] = useState('All Programs');
   const [tagFilter, setTagFilter] = useState<'All' | 'This Month'>('All');
   const [archivingId, setArchivingId] = useState<string | null>(null);
+  const successMessage = (location.state as { successMessage?: string } | null)?.successMessage ?? '';
+
+  useEffect(() => {
+    if (!successMessage) return;
+
+    setSuccess(successMessage);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, navigate, successMessage]);
 
   const handleOpenManuscript = async (thesis: Thesis) => {
     const previewWindow = window.open('', '_blank');

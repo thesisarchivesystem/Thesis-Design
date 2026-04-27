@@ -32,6 +32,16 @@ const formatDueDate = (value?: string) => {
   });
 };
 
+const isRevisionPastDue = (value?: string) => {
+  if (!value) return false;
+
+  const dueDate = new Date(value);
+  if (Number.isNaN(dueDate.getTime())) return false;
+
+  dueDate.setHours(23, 59, 59, 999);
+  return Date.now() > dueDate.getTime();
+};
+
 const getStatusLabel = (status: ThesisStatus, isArchived?: boolean) => {
   if (status === 'approved') return isArchived ? 'Archived' : 'Approved';
   if (status === 'rejected') return 'Revisions Needed';
@@ -149,6 +159,11 @@ export default function StudentMySubmissionsPage() {
   };
 
   const handleMakeRevision = (item: Thesis) => {
+    if (isRevisionPastDue(item.revision_due_at)) {
+      setError('The revision due date has already passed. You can still view details or submit an extension request.');
+      return;
+    }
+
     setError(null);
     navigate(`/student/upload-thesis?draft=${encodeURIComponent(item.id)}`, {
       state: { draft: item },
@@ -519,12 +534,17 @@ export default function StudentMySubmissionsPage() {
                         }
 
                         if (action === 'Make Revision') {
+                          const isDisabled = isRevisionPastDue(item.revision_due_at);
+
                           return (
                             <button
                               key={action}
                               type="button"
                               className="student-submissions-secondary"
                               onClick={() => handleMakeRevision(item)}
+                              aria-disabled={isDisabled}
+                              title={isDisabled ? 'Revision deadline has passed.' : undefined}
+                              style={isDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
                             >
                               <PencilLine size={15} />
                               {action}

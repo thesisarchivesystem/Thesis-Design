@@ -83,4 +83,87 @@ class ExtensionRequestController extends Controller
 
         return response()->json($requests);
     }
+
+    public function showForFaculty(Request $request, string $id): JsonResponse
+    {
+        $extensionRequest = ExtensionRequest::query()
+            ->where('faculty_id', $request->user()->id)
+            ->with([
+                'thesis:id,title,status,submitted_by,adviser_id,revision_due_at',
+                'student:id,name,email',
+                'faculty:id,name,email',
+            ])
+            ->findOrFail($id);
+
+        return response()->json([
+            'data' => $extensionRequest,
+        ]);
+    }
+
+    public function decide(Request $request, string $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:approved,rejected',
+        ]);
+
+        $extensionRequest = ExtensionRequest::query()
+            ->where('faculty_id', $request->user()->id)
+            ->with([
+                'thesis:id,title,status,submitted_by,adviser_id,revision_due_at',
+                'student:id,name,email',
+                'faculty:id,name,email',
+            ])
+            ->findOrFail($id);
+
+        if ($extensionRequest->status !== 'pending') {
+            return response()->json(['error' => 'This extension request has already been resolved.'], 422);
+        }
+
+        $extensionRequest->update([
+            'status' => $validated['status'],
+        ]);
+
+        if ($validated['status'] === 'approved' && $extensionRequest->thesis) {
+            $extensionRequest->thesis->update([
+                'revision_due_at' => $extensionRequest->requested_deadline,
+            ]);
+        }
+
+        $eventName = $validated['status'] === 'approved' ? 'extension.approved' : 'extension.rejected';
+        $notificationTitle = $validated['status'] === 'approved'
+            ? 'Extension request approved'
+            : 'Extension request rejected';
+
+        $this->logger->log($request->user(), $eventName, 'extension_request', $extensionRequest->id, [
+            'thesis_id' => $extensionRequest->thesis_id,
+            'student_id' => $extensionRequest->student_id,
+        ]);
+
+        if ($extensionRequest->student) {
+            $this->notifications->notify(
+                $extensionRequest->student,
+                $eventName,
+                $notificationTitle,
+                $extensionRequest->thesis?->title ?? 'Thesis extension request',
+                [
+                    'extension_request_id' => $extensionRequest->id,
+                    'thesis_id' => $extensionRequest->thesis_id,
+                    'status' => $validated['status'],
+                ],
+            );
+        }
+
+        $extensionRequest->refresh()->load([
+            'thesis:id,title,status,submitted_by,adviser_id,revision_due_at',
+            'student:id,name,email',
+            'faculty:id,name,email',
+        ]);
+
+        return response()->json([
+            'message' => $validated['status'] === 'approved'
+                ? 'Extension request approved successfully.'
+                : 'Extension request rejected successfully.',
+            'data' => $extensionRequest,
+        ]);
+    }
 }

@@ -10,6 +10,15 @@ type LocationState = {
   thesis?: Thesis;
 };
 
+const formatStatusLabel = (status?: string) => {
+  if (!status) return '';
+
+  return status
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
 export default function StudentExtensionRequestPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,7 +120,7 @@ export default function StudentExtensionRequestPage() {
               <div className="student-upload-grid">
                 <label className="student-upload-field">
                   <span>Current Status</span>
-                  <input value={thesis.status} readOnly />
+                  <input value={formatStatusLabel(thesis.status)} readOnly />
                 </label>
 
                 <label className="student-upload-field">

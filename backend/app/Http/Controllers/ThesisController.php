@@ -378,6 +378,24 @@ class ThesisController extends Controller
         return response()->json($theses);
     }
 
+    public function reviewStats(Request $request): JsonResponse
+    {
+        $baseQuery = Thesis::query()
+            ->where('adviser_id', $request->user()->id)
+            ->whereIn('status', ['pending', 'under_review', 'approved', 'rejected']);
+
+        $stats = [
+            'total_submissions' => (clone $baseQuery)->count(),
+            'approved_thesis' => (clone $baseQuery)->where('status', 'approved')->count(),
+            'pending_reviews' => (clone $baseQuery)->whereIn('status', ['pending', 'under_review'])->count(),
+            'rejected_thesis' => (clone $baseQuery)->where('status', 'rejected')->count(),
+        ];
+
+        return response()->json([
+            'data' => $stats,
+        ]);
+    }
+
     public function approved(Request $request): JsonResponse
     {
         $theses = Thesis::where('status', 'approved')

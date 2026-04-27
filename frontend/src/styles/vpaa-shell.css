@@ -3684,8 +3684,8 @@
 .submission-accent-panel .student-submissions-summary-box strong {
   margin-top: 10px;
   font-family: inherit;
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 28px;
+  line-height: 1.1;
   color: var(--text-primary);
   font-weight: 700;
 }
