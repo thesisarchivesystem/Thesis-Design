@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Clock3, Files, LibraryBig } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FacultyLayout from '../../components/faculty/FacultyLayout';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import { thesisService } from '../../services/thesisService';
 import type { Thesis } from '../../types/thesis.types';
 
@@ -53,6 +54,7 @@ const getLatestTimestamp = (values: Array<string | undefined>) => {
 export default function FacultyApprovedThesesPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { confirm } = useConfirmDialog();
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -113,7 +115,12 @@ export default function FacultyApprovedThesesPage() {
   const handleArchiveThesis = async (thesis: Thesis) => {
     if (archivingId) return;
 
-    const confirmed = window.confirm(`Archive "${thesis.title}" now? This will make it visible in the dashboard, search, and categories.`);
+    const confirmed = await confirm({
+      title: 'Archive Thesis',
+      message: `Archive "${thesis.title}" now?\n\nThis will make it visible in the dashboard, search, and categories.`,
+      confirmLabel: 'OK',
+      cancelLabel: 'Cancel',
+    });
     if (!confirmed) return;
 
     setArchivingId(thesis.id);

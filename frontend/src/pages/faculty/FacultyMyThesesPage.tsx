@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, BookOpenText, CalendarDays, Check, CirclePlus, Clock3, FileText, PencilLine, ShieldCheck, Sparkles } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FacultyLayout from '../../components/faculty/FacultyLayout';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import { facultyThesisService } from '../../services/facultyThesisService';
 import { thesisService } from '../../services/thesisService';
 import type { Thesis, ThesisStatus } from '../../types/thesis.types';
@@ -107,6 +108,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 export default function FacultyMyThesesPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { confirm } = useConfirmDialog();
   const [items, setItems] = useState<Thesis[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,7 +207,12 @@ export default function FacultyMyThesesPage() {
   const handleArchive = async (item: Thesis) => {
     if (archivingId) return;
 
-    const confirmed = window.confirm(`Archive "${item.title}" now? This will make it visible in the main thesis archive.`);
+    const confirmed = await confirm({
+      title: 'Archive Thesis',
+      message: `Archive "${item.title}" now?\n\nThis will make it visible in the main thesis archive.`,
+      confirmLabel: 'OK',
+      cancelLabel: 'Cancel',
+    });
     if (!confirmed) return;
 
     setArchivingId(item.id);
