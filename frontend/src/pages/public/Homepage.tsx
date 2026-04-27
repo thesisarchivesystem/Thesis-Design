@@ -362,7 +362,6 @@ export default function Homepage() {
     const panelWidth = panelRect?.width ?? 360;
     const panelHeight = panelRect?.height ?? 520;
     const fabWidth = fabRect?.width ?? CHAT_FAB_SIZE;
-    const fabHeight = fabRect?.height ?? CHAT_FAB_SIZE;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const fabLeft = viewportWidth - position.right - fabWidth;
