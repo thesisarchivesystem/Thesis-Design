@@ -116,7 +116,7 @@ export default function SharedThesisDetailsPage({
   const thesisCategories = thesis?.categories?.length
     ? thesis.categories.slice(0, 5)
     : (thesis?.category ? [thesis.category] : []);
-  const canDownloadManuscript = role === 'vpaa' && Boolean(thesis?.file_url);
+  const canDownloadManuscript = (role === 'vpaa' || role === 'faculty') && Boolean(thesis?.file_url);
 
   const handleDownloadManuscript = async () => {
     if (!thesis?.id || !thesis.file_url || !canDownloadManuscript) {
